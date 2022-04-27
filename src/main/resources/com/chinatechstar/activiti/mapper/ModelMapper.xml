@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chinatechstar.activiti.mapper.ModelMapper">
+
+  <insert id="insertModelSysOrg">
+    INSERT INTO act_re_model_sysorg
+      (id, model_id, sysorg_id)
+    VALUES
+      (#{id,jdbcType=VARCHAR}, #{modelId,jdbcType=VARCHAR}, #{sysOrgId,jdbcType=BIGINT})
+  </insert>
+
+  <insert id="insertModelSysUser">
+    INSERT INTO act_re_model_sysuser
+      (id, model_id, sysuser_id, post_code)
+    VALUES
+      (#{id,jdbcType=VARCHAR}, #{modelId,jdbcType=VARCHAR}, #{sysUserId,jdbcType=BIGINT}, #{postCode,jdbcType=VARCHAR})
+  </insert>
+
+  <delete id="deleteModelSysOrg">
+    DELETE FROM act_re_model_sysorg WHERE model_id = #{modelId,jdbcType=VARCHAR}
+  </delete>
+
+  <delete id="deleteModelSysUser">
+    DELETE FROM act_re_model_sysuser WHERE model_id = #{modelId,jdbcType=VARCHAR}
+  </delete>
+
+</mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chinatechstar.generator.mapper.GeneratorFormMapper">
+
+    <select id="queryGeneratorForm" parameterType="map" resultType="java.util.LinkedHashMap">
+        SELECT CAST(id AS CHAR) AS "id",form_description AS "formDescription",form_content AS "formContent",create_time AS "createTime"
+        FROM mscode_generator_form
+  	    WHERE 1 = 1
+        <if test="formDescription != null and formDescription != ''">
+            AND form_description LIKE CONCAT('%',#{formDescription},'%')
+        </if>
+        <if test="formContent != null and formContent != ''">
+            AND form_content LIKE CONCAT('%',#{formContent},'%')
+        </if>
+        <if test="tenantCode != null and tenantCode != ''">
+            AND tenant_code = #{tenantCode}
+        </if>
+        <if test="sort != null and sequence != null">
+            ORDER BY ${sort} ${sequence}
+        </if>
+    </select>
+
+    <insert id="insertGeneratorForm" parameterType="GeneratorForm">
+        INSERT INTO mscode_generator_form
+            (id, form_description, form_content, tenant_code)
+        VALUES
+            (#{id,jdbcType=BIGINT}, #{formDescription,jdbcType=VARCHAR}, #{formContent,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateGeneratorForm" parameterType="GeneratorForm">
+        UPDATE mscode_generator_form
+        <set>
+            <if test="formDescription != null and formDescription != ''">form_description=#{formDescription},</if>
+            form_content=#{formContent,jdbcType=VARCHAR}
+        </set>
+        WHERE id=#{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteGeneratorForm">
+		DELETE FROM mscode_generator_form WHERE id IN
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id,jdbcType=BIGINT}
+		</foreach>
+	</delete>
+
+</mapper>

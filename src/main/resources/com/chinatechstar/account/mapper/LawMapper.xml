@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chinatechstar.environment.mapper.LawMapper">
+
+    <select id="queryLawList" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.LawVo">
+        select id,law_title,law_text,p_id,type_code,file_url from mscode_law
+        where 1=1
+        <if test="typeCode != null and typeCode != ''">
+            and type_code = #{typeCode}
+        </if>
+    </select>
+    <select id="queryLawParent" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.LawVo">
+        select id,law_title,law_text,p_id,type_code,file_url from mscode_law where p_id=0
+        <if test="typeCode != null and typeCode != ''">
+            and  type_code = #{typeCode}
+        </if>
+    </select>
+    <select id="queryLawsire" resultType="com.chinatechstar.environment.entity.Law" parameterType="com.chinatechstar.environment.vo.LawVo">
+        select id,law_title lawTitle,law_text lawText,p_id pId,type_code typeCode,file_url fileUrl from mscode_law
+        <if test="typeCode != null and typeCode != ''">
+            where type_code = #{typeCode}
+        </if>
+    </select>
+    <select id="queryLawListpage" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.LawVo">
+        select id,law_title,law_text,p_id,type_code,file_url from mscode_law
+        where 1=1
+        <if test="typeCode != null and typeCode != ''">
+            and type_code = #{typeCode}
+        </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+    <select id="queryInspect" parameterType="com.chinatechstar.environment.vo.InspectVo" resultType="java.util.Map">
+        SELECT id,inspect_title,inspect_text,firm_id,file_url,	inspect_code,inspect_img,inspet_file,inspet_content
+        from mscode_insprct
+        where 1=1
+        <if test="firmId != null and firmId != ''">
+            and firm_id = #{firmId}
+        </if>
+    </select>
+    <select id="queryInspectpage" parameterType="com.chinatechstar.environment.vo.InspectVo" resultType="java.util.Map">
+        SELECT id,inspect_title,inspect_text,firm_id,file_url,	inspect_code,inspect_img,inspet_file,inspet_content
+        from mscode_insprct
+        where 1=1
+        <if test="firmId != null and firmId != ''">
+            and firm_id = #{firmId}
+        </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+    <select id="queryFirmList" resultType="java.util.Map">
+        select id,firm_name,firm_log_path from mscode_firm
+    </select>
+    <insert id="addLaw" parameterType="com.chinatechstar.environment.entity.Law">
+        insert into mscode_law (law_title,law_text,p_id,type_code,file_url) values (#{lawTitle},#{lawText},#{pId},#{typeCode},#{fileUrl})
+    </insert>
+    <update id="updatelaw" parameterType="com.chinatechstar.environment.entity.Law">
+        update mscode_law set law_title=#{lawTitle},law_text=#{lawText},p_id=#{pId},type_code=#{typeCode},file_url=#{fileUrl} where id=#{id}
+    </update>
+    <delete id="delLawById" parameterType="java.lang.Integer">
+        DELETE FROM mscode_law where id =#{id}
+    </delete>
+    <update id="updateInspectById" parameterType="com.chinatechstar.environment.entity.Inspect">
+        update mscode_insprct
+        set
+            inspect_title=#{inspectTitle},
+            inspect_text=#{inspectText},
+            firm_id=#{firmId},
+            file_url=#{fileUrl},
+            inspect_code=#{inspectCode},
+            inspect_img=#{inspectImg},
+            inspet_file=#{inspetFile},
+            inspet_content=#{inspetContent}
+
+         where id=#{id}
+    </update>
+    <delete id="delInspectById" parameterType="java.lang.Integer">
+        delete from mscode_insprct where id = #{id}
+    </delete>
+    <insert id="addInspect" parameterType="com.chinatechstar.environment.entity.Inspect">
+        insert into mscode_insprct(inspect_title,inspect_text,firm_id,file_url,inspect_code,inspect_img,inspet_file,inspet_content)
+         VALUES
+              (#{inspectTitle},#{inspectText},#{firmId},#{fileUrl},#{inspectCode},#{inspectImg},#{inspetFile},#{inspetContent})
+    </insert>
+    <select id="queryFirmByid" parameterType="java.lang.Long" resultType="java.util.Map">
+        select id,firm_name,firm_log_path from mscode_firm where id = #{id}
+    </select>
+
+    <select id="queryConsult" resultType="com.chinatechstar.environment.entity.Consult">
+        select id,consult_name consultName,consult_text consultText,consult_type consultType
+        from mscode_consult
+    </select>
+    <insert id="addConsult" parameterType="com.chinatechstar.environment.entity.Consult">
+        insert into mscode_consult(consult_name,consult_text,consult_type) VALUES(#{consultName},#{consultText},#{consultType})
+    </insert>
+    <!--供应商接口-->
+    <select id="querySupplierList" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.SupplierVo">
+        select id,supplier_name,supplier_type,supplier_intro,supplier_logo from mscode_supplier
+        where 1=1
+        <if test="supplierType != '' and supplierType != null">
+            and supplier_type =#{supplierType}
+        </if>
+    </select>
+    <select id="queryPageSupplier" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.SupplierVo">
+        select id,supplier_name,supplier_type,supplier_intro,supplier_logo from mscode_supplier
+        where 1=1
+        <if test="supplierType != '' and supplierType != null">
+            and supplier_type =#{supplierType}
+        </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+    <insert id="addSupplier" parameterType="com.chinatechstar.environment.vo.SupplierVo">
+          INSERT INTO mscode_supplier ( supplier_name, supplier_type, supplier_intro,supplier_logo )
+            VALUES
+                (#{supplierName},#{supplierType},#{supplierIntro},#{supplierLogo})
+    </insert>
+    <update id="updateSupplier" parameterType="com.chinatechstar.environment.vo.SupplierVo">
+          update mscode_supplier set supplier_name=#{supplierName},supplier_type=#{supplierType},supplier_intro=#{supplierIntro},supplier_logo=#{supplierLogo} where id=#{id}
+    </update>
+    <delete id="delSupplierById" parameterType="java.lang.Integer">
+        delete from  mscode_supplier where id=#{id}
+    </delete>
+    <insert id="addNeed" parameterType="com.chinatechstar.environment.vo.NeedVo">
+        INSERT INTO mscode_need ( need_title, need_text )
+        VALUES
+            (#{needTitle},#{neetText})
+    </insert>
+    <select id="getsupplieerName" resultType="java.util.Map">
+        SELECT
+                supplier_type
+            FROM
+                mscode_supplier
+            GROUP BY
+                supplier_type
+    </select>
+    <select id="querySupplieerByName" parameterType="com.chinatechstar.environment.vo.SupplierVo" resultType="java.util.Map">
+          SELECT
+                id,
+                supplier_name,
+                supplier_type,
+                supplier_intro,
+                supplier_logo
+            FROM
+                mscode_supplier
+            WHERE
+                supplier_name = #{supplierName}
+    </select>
+    <!--需求接口-->
+    <select id="queryNeedList" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.NeedVo">
+        SELECT
+                id,
+                need_title,
+                need_text
+            FROM
+                mscode_need
+            WHERE
+                1=1
+            <if test="needTitle != null and needTitle != ''">
+                and need_title = #{needTitle}
+            </if>
+    </select>
+    <select id="queryPageNeedList" resultType="java.util.Map" parameterType="com.chinatechstar.environment.vo.NeedVo">
+        SELECT
+                id,
+                need_title,
+                need_text
+            FROM
+                mscode_need
+            WHERE
+                1=1
+            <if test="needTitle != null and needTitle != ''">
+                and need_title = #{needTitle}
+            </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+    <update id="updateNeedById" parameterType="com.chinatechstar.environment.vo.NeedVo">
+        update mscode_need set need_title= #{needTitle},need_text=#{neetText}
+        where id=#{id}
+    </update>
+    <select id="queryLawById" parameterType="java.lang.Integer" resultType="com.chinatechstar.environment.vo.LawVo">
+        select id,law_title lawTitle,law_text lawText,p_id pId,type_code typeCode,file_url fileUrl from mscode_law where id = #{id}
+    </select>
+    <delete id="delNeedById" parameterType="java.lang.Integer">
+        delete from mscode_need where id = #{id}
+    </delete>
+    <!--供销商小程序查询接口-->
+    <select id="querySupplierByType" parameterType="com.chinatechstar.environment.vo.SupplierVo" resultType="java.util.Map">
+        SELECT
+                id,
+                supplier_name,
+                supplier_type,
+                supplier_intro,
+                supplier_logo
+            FROM
+                mscode_supplier
+            WHERE
+                1 =1
+            <if test="supplierType != '' and supplierType != null">
+                and supplier_type =#{supplierType}
+            </if>
+    </select>
+    <update id="updateConsult" parameterType="com.chinatechstar.environment.entity.Consult">
+        update mscode_consult set consult_name= #{consultName},consult_text=#{consultText},consult_type=#{consultType}
+        where id = #{id}
+    </update>
+    <delete id="delConsultById" parameterType="com.chinatechstar.environment.entity.Consult">
+        delete from mscode_consult where id = #{id}
+    </delete>
+    <select id="queryConsultList" resultType="com.chinatechstar.environment.vo.ConsultVo">
+        select id,consult_name consultName,consult_text consultText,consult_type consultType from mscode_consult
+        where 1=1
+        <if test="consultType != '' and consultType != null">
+            and consult_type = #{consultType}
+        </if>
+    </select>
+    <select id="queryConsultPage" resultType="com.chinatechstar.environment.vo.ConsultVo" parameterType="com.chinatechstar.environment.vo.ConsultVo">
+        select id,consult_name consultName,consult_text consultText,consult_type consultType from mscode_consult
+        where 1=1
+        <if test="consultType != '' and consultType != null">
+            and consult_type = #{consultType}
+        </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+
+    <!--图片管理接口-->
+    <select id="queryPictutre" parameterType="com.chinatechstar.environment.vo.PictureVo" resultType="com.chinatechstar.environment.vo.PictureVo">
+        SELECT
+                p.id,
+                p.picture_byte AS pictureByte,
+                p.picture_type AS pictureType,
+                p.tenant_code AS tenantCode,
+                t.tenant_name AS tenantName
+            FROM
+                mscode_sys_tenant t,
+                mscode_picture p
+            WHERE
+                p.tenant_code = t.tenant_code
+    </select>
+    <select id="queryPictutrepage" parameterType="com.chinatechstar.environment.vo.PictureVo" resultType="com.chinatechstar.environment.vo.PictureVo">
+         SELECT
+                p.id,
+                p.picture_byte AS pictureByte,
+                p.picture_type AS pictureType,
+                p.tenant_code AS tenantCode,
+                t.tenant_name AS tenantName
+            FROM
+                mscode_sys_tenant t,
+                mscode_picture p
+            WHERE
+                p.tenant_code = t.tenant_code
+            limit #{currentPage},#{pageSize}
+    </select>
+    <insert id="addPictutre" parameterType="com.chinatechstar.environment.entity.Picture">
+       INSERT INTO mscode_picture ( picture_byte, picture_type, tenant_code )
+            VALUES
+                (#{pictureByte},#{pictureType},#{tenantCode})
+    </insert>
+    <update id="updatePictutre" parameterType="com.chinatechstar.environment.entity.Picture">
+            update mscode_picture
+              set
+                picture_byte= #{pictureByte},
+                picture_type=#{pictureType},
+                tenant_code=#{tenantCode}
+              where
+                id = #{id}
+    </update>
+    <delete id="delPictutreById" parameterType="java.lang.Integer">
+        delete from mscode_picture where id = #{id}
+    </delete>
+    <!--咨询类型列表-->
+    <select id="queryConsultType" resultType="com.chinatechstar.environment.entity.Consult">
+        select consult_type consultType from mscode_consult
+            GROUP BY consult_type
+    </select>
+    <!--通过id查询咨询详情00-->
+    <select id="queryConsultById"  resultType="com.chinatechstar.environment.entity.Consult">
+        select id,consult_name consultName,consult_text consultText,consult_type consultType from mscode_consult
+        where id=#{id}
+    </select>
+    <!--上传体检 问题处理结果-->
+    <update id="addInspectUpdate" parameterType="com.chinatechstar.environment.entity.Inspect">
+        update mscode_insprct
+        set
+            inspect_code=#{inspectCode},
+            inspect_img=#{inspectImg},
+            inspet_file=#{inspetFile},
+            inspet_content=#{inspetContent}
+
+         where id=#{id}
+    </update>
+    <!--分页查询总条数-->
+    <select id="queryImgs" parameterType="com.chinatechstar.environment.vo.ImgsVo" resultType="com.chinatechstar.environment.vo.ImgsVo">
+        select id,img_content imgContent,img_code imgCode from mscode_img
+        where 1=1
+        <if test="imgCode != '' and imgCode != null">
+            and img_code = #{imgCode}
+        </if>
+    </select>
+    <select id="queryImgsPage" parameterType="com.chinatechstar.environment.vo.ImgsVo" resultType="com.chinatechstar.environment.vo.ImgsVo">
+        select id,img_content imgContent,img_code imgCode from mscode_img
+        where 1=1
+        <if test="imgCode != '' and imgCode != null">
+            and img_code = #{imgCode}
+        </if>
+        limit #{currentPage},#{pageSize}
+    </select>
+    <update id="updateImgs" parameterType="com.chinatechstar.environment.vo.ImgsVo">
+        update mscode_img
+              set
+                img_code=#{imgCode},
+                img_content=#{imgContent}
+              where
+                id = #{id}
+    </update>
+    <insert id="addImgs" parameterType="com.chinatechstar.environment.vo.ImgsVo">
+        INSERT INTO mscode_img ( img_code, img_content )
+            VALUES
+                (#{imgCode},#{imgContent})
+    </insert>
+    <delete id="delImgs" parameterType="java.lang.Integer">
+         delete from mscode_img where id = #{id}
+    </delete>
+    <select id="getImgsByCode" parameterType="java.lang.Integer" resultType="com.chinatechstar.environment.vo.ImgsVo">
+        select id,img_content imgContent,img_code imgCode from mscode_img
+        where 1=1
+        <if test="imgsCode != '' and imgsCode != null">
+            and img_code = #{imgCode}
+        </if>
+    </select>
+</mapper>

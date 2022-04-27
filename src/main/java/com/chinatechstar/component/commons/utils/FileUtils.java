@@ -1,0 +1,63 @@
+package com.chinatechstar.component.commons.utils;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.util.ResourceUtils;
+
+import com.chinatechstar.component.commons.exception.ServiceException;
+
+/**
+ * 文件工具类
+ * 
+ * @版权所有 广东国星科技有限公司 www.mscodecloud.com
+ */
+public class FileUtils {
+
+	private FileUtils() {
+
+	}
+
+	/**
+	 * 下载文件
+	 *
+	 * @param originalFilename 文件名称
+	 * @param url              下载URL
+	 * @param response         响应对象
+	 * @throws IOException
+	 */
+	public static void downloadFile(String originalFilename, String url, HttpServletResponse response) throws IOException {
+		ServletOutputStream servletOutputStream = null;
+		try {
+			servletOutputStream = response.getOutputStream();
+			response.setCharacterEncoding("utf-8");
+			response.setHeader("Content-Disposition", "attachment;filename=" + originalFilename);
+			response.setContentType("application/octet-stream");
+			//本地版本
+			//File rootDirectoryPath = new File(ResourceUtils.getURL("classpath:").getPath());
+			//String path = rootDirectoryPath + url;
+			//服务器版本
+			String path ="/www/wwwroot/huanbaoitemjar"  + url;
+			File file = new File(path);
+			if (!file.exists()) {
+				throw new FileNotFoundException("找不到此文件： " + originalFilename);
+			}
+			byte[] bytes = Files.readAllBytes(Paths.get(path));
+			servletOutputStream.write(bytes);
+			servletOutputStream.flush();
+		} catch (Exception e) {
+			throw new ServiceException(e.toString());
+		} finally {
+			if (servletOutputStream != null) {
+				servletOutputStream.close();
+			}
+		}
+	}
+
+}

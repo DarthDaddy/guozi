@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chinatechstar.generator.mapper.GeneratorTemplateMapper">
+
+    <select id="queryGeneratorTemplate" parameterType="map" resultType="java.util.LinkedHashMap">
+        SELECT MAX(CAST(mgt.id AS CHAR)) AS "id",mgt.type AS "type",MAX(msdo.dict_name) AS "typeCn",GROUP_CONCAT(mgt.item) AS "item",GROUP_CONCAT(msdt.dict_name) AS "itemCn",MAX(mgt.create_time) AS "createTime"
+        FROM mscode_generator_template mgt LEFT JOIN mscode_sys_dict msdo ON mgt.type = msdo.dict_value LEFT JOIN mscode_sys_dict msdt ON mgt.item = msdt.dict_value 
+  	    WHERE 1 = 1
+      	<if test="type != null and type != ''">
+    		AND mgt.type  = #{type}
+    	</if>
+        <if test="item != null and item != ''">
+            AND mgt.item  = #{item}
+        </if>
+        <if test="tenantCode != null and tenantCode != ''">
+            AND mgt.tenant_code = #{tenantCode}
+        </if>
+        GROUP BY mgt.type
+        <if test="sort != null and sequence != null">
+            ORDER BY ${sort} ${sequence}
+        </if>
+    </select>
+
+    <select id="queryGeneratorTemplateEntity" parameterType="map" resultType="java.util.LinkedHashMap">
+        SELECT type AS "type",item AS "item",content AS "content"
+        FROM mscode_generator_template 
+  	    WHERE 1 = 1
+      	<if test="type != null and type != ''">
+    		AND type  = #{type}
+    	</if>
+        <if test="itemArray != null and itemArray.length > 0">
+            AND item IN
+			<foreach item="item" collection="itemArray" open="(" separator="," close=")">
+				#{item,jdbcType=VARCHAR}
+			</foreach>
+		</if>
+    </select>
+
+    <select id="queryTemplateByType" resultType="java.util.LinkedHashMap">
+        SELECT item AS "item",content AS "content"
+        FROM mscode_generator_template
+        WHERE type = #{type,jdbcType=VARCHAR}
+    </select>
+
+    <select id="queryGeneratorTemplateContent" parameterType="String" resultType="String">
+        SELECT content AS "content"
+        FROM mscode_generator_template
+        WHERE type = #{type,jdbcType=VARCHAR} AND item = #{item,jdbcType=VARCHAR}
+    </select>
+
+    <select id="getGeneratorTemplateByType" resultType="Integer">
+        SELECT DISTINCT 1
+        FROM mscode_generator_template
+        WHERE type = #{type,jdbcType=VARCHAR}
+    </select>
+
+    <insert id="insertGeneratorTemplate" parameterType="GeneratorTemplate">
+        INSERT INTO mscode_generator_template
+            (id, type, item, content, tenant_code)
+        VALUES
+            (#{id,jdbcType=BIGINT}, #{type,jdbcType=VARCHAR}, #{item,jdbcType=VARCHAR}, #{content,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateGeneratorTemplateContent" parameterType="GeneratorTemplate">
+        UPDATE mscode_generator_template
+        <set>
+			content=#{content}
+        </set>
+        WHERE type=#{type,jdbcType=VARCHAR} AND item=#{item,jdbcType=VARCHAR}
+    </update>
+
+    <delete id="deleteGeneratorTemplate">
+		DELETE FROM mscode_generator_template WHERE type IN
+		<foreach item="type" collection="array" open="(" separator="," close=")">
+			#{type,jdbcType=VARCHAR}
+		</foreach>
+	</delete>
+
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.chinatechstar.admin.mapper.SysPostMapper">
+
+    <sql id="queryConditions">
+        <if test="postCode != null and postCode != ''">
+            AND msp.post_code LIKE CONCAT('%',#{postCode},'%')
+        </if>
+        <if test="postName != null and postName != ''">
+            AND msp.post_name LIKE CONCAT('%',#{postName},'%')
+        </if>
+        <if test="tenantCode != null and tenantCode != ''">
+            AND msp.tenant_code = #{tenantCode}
+        </if>
+    </sql>
+
+    <select id="querySysPost" parameterType="map" resultType="java.util.LinkedHashMap">
+        SELECT CAST(msp.id AS CHAR) AS "id",msp.post_code AS "postCode",msp.post_name AS "postName",msp.post_sequence AS "postSequence",CAST(msp.parent_id AS CHAR) AS "parentId",msp.create_time AS "createTime"
+        FROM mscode_sys_post msp
+  	    WHERE 1 = 1
+        <include refid="queryConditions"></include>
+        <if test="parentId != null">
+            AND msp.parent_id = #{parentId}
+        </if>
+        ORDER BY post_sequence ASC
+    </select>
+
+    <select id="querySysPostInfo" parameterType="map" resultType="java.util.LinkedHashMap">
+        SELECT CAST(id AS CHAR) AS "id",CAST(parent_id AS CHAR) AS "parentId",post_name AS "postName"
+        FROM mscode_sys_post
+  	    WHERE 1 = 1
+      	<if test="id != null">
+    		AND id = #{id}
+    	</if>
+      	<if test="postCode != null and postCode != ''">
+    		AND post_code = #{postCode}
+    	</if>
+    	<if test="idArray != null">
+    		AND id IN
+            <foreach item="item" index="index" collection="idArray" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+    	</if>
+    </select>
+
+    <select id="querySysPostTree" resultType="java.util.LinkedHashMap">
+        SELECT post_code AS "postCode",CAST(id AS CHAR) AS "id",CAST(id AS CHAR) AS "key",post_name AS "title",CAST(id AS CHAR) AS "value",CAST(parent_id AS CHAR) AS "parentId"
+        FROM mscode_sys_post
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
+        ORDER BY post_sequence ASC
+    </select>
+
+    <select id="getSysPostByPostCode" resultType="Integer">
+        SELECT DISTINCT 1
+        FROM mscode_sys_post
+        WHERE post_code = #{postCode,jdbcType=VARCHAR}
+    </select>
+
+    <insert id="insertSysPost" parameterType="SysPost">
+        INSERT INTO mscode_sys_post
+            (id, post_code, post_name, post_sequence, parent_id, tenant_code)
+        VALUES
+            (#{id,jdbcType=BIGINT}, #{postCode,jdbcType=VARCHAR}, #{postName,jdbcType=VARCHAR}, #{postSequence,jdbcType=BIGINT}, #{parentId,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="updateSysPost" parameterType="SysPost">
+        UPDATE mscode_sys_post
+        <set>
+            <if test="postName != null and postName != ''">post_name=#{postName},</if>
+            <if test="parentId != null">parent_id=#{parentId},</if>
+            post_sequence=#{postSequence,jdbcType=BIGINT}
+        </set>
+        WHERE id=#{id,jdbcType=BIGINT}
+    </update>
+
+    <delete id="deleteSysPost">
+		DELETE FROM mscode_sys_post 
+        WHERE id IN
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id,jdbcType=BIGINT}
+		</foreach>
+	</delete>
+
+</mapper>
