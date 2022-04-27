@@ -63,7 +63,7 @@ public class GatewayFilter extends ZuulFilter {
 
 		String url = request.getRequestURL().toString();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		System.out.println (url.indexOf("/api/uaa/oauth/token"));
+
 		if (url.indexOf("/api/uaa/oauth/token") == -1 && url.indexOf("/api/file/static/upload") == -1
 				&& url.indexOf("/api/account/sysuserdetail/compareCaptcha") == -1 && url.indexOf("swagger") == -1 && url.indexOf("/v2/api-docs") == -1
 				&& url.indexOf("druid") == -1) {
@@ -72,7 +72,7 @@ public class GatewayFilter extends ZuulFilter {
 			String newPartialUrl = "/" + partialUrlArray[1] + "/" + partialUrlArray[2] + "/" + partialUrlArray[3];// 再处理待比较url，以支持路径包含传参，格式是：模块路径 + 类路径 + 方法路径
 			StringBuilder stringBuilder = new StringBuilder();
 			for (int i = 0; i < authentication.getAuthorities().size(); i++) {
-					stringBuilder.append(redisUtils.get(ApplicationConstants.URL_ROLECODE_PREFIX + authentication.getAuthorities().toArray()[i]));
+				stringBuilder.append(redisUtils.get(ApplicationConstants.URL_ROLECODE_PREFIX + authentication.getAuthorities().toArray()[i]));
 			}
 			if (stringBuilder.indexOf(newPartialUrl) == -1) {
 				unauthorizedOperate(context);

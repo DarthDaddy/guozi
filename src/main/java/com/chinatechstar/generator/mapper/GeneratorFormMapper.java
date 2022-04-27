@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.generator.entity.GeneratorForm;
 
 /**
@@ -39,10 +40,11 @@ public interface GeneratorFormMapper {
 
 	/**
 	 * 删除表单
-	 * 
-	 * @param id 表单ID
+	 *
+	 * @param id         表单ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteGeneratorForm(Long[] id);
+	int deleteGeneratorForm(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }

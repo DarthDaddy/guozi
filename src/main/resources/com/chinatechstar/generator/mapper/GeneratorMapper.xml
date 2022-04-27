@@ -4,7 +4,7 @@
 <mapper namespace="com.chinatechstar.generator.mapper.GeneratorMapper">
 
     <sql id="queryConditions">
-        SELECT CAST(mg.id AS CHAR) AS "id",mg.package_name AS "packageName",mg.entity_name AS "entityName",mg.table_name AS "tableName",mg.service_name AS "serviceName",mg.create_time AS "createTime",GROUP_CONCAT(mgf.field) AS "fieldList"
+        SELECT CAST(mg.id AS CHAR) AS "id",mg.package_name AS "packageName",mg.entity_name AS "entityName",mg.table_name AS "tableName",mg.service_name AS "serviceName",GROUP_CONCAT(mgf.field) AS "fieldList",mg.create_time AS "createTime"
         FROM mscode_generator mg LEFT JOIN mscode_generator_field mgf ON mg.id = mgf.generator_id
     </sql>
 
@@ -24,7 +24,7 @@
             AND table_name LIKE CONCAT('%',#{tableName},'%')
         </if>
         <if test="tenantCode != null and tenantCode != ''">
-            AND tenant_code = #{tenantCode}
+            AND mg.tenant_code = #{tenantCode}
         </if>
         GROUP BY mg.id
         <if test="sort != null and sequence != null">
@@ -38,17 +38,18 @@
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id,jdbcType=BIGINT}
         </foreach>
+        AND mg.tenant_code = #{tenantCode,jdbcType=VARCHAR}
         GROUP BY mg.id
     </select>
 
     <select id="queryFieldByGeneratorId" resultType="java.util.LinkedHashMap">
         SELECT id AS "id",field_type AS "fieldType",field AS "field",CONCAT(UPPER(LEFT(field,1)),SUBSTRING(field,2,(LENGTH(field)-1))) AS "upperField"
         FROM mscode_generator_field
-        WHERE generator_id = #{generatorId,jdbcType=BIGINT}
+        WHERE generator_id = #{generatorId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryGeneratorTable" parameterType="map" resultType="java.util.LinkedHashMap">
-        SELECT MAX(t.table_name) AS tableName,MAX(t.table_comment) AS tableComment,MAX(t.create_time) AS createTime,GROUP_CONCAT(DISTINCT c.column_name) AS columnName
+        SELECT MAX(t.table_name) AS tableName,MAX(t.table_comment) AS tableComment,GROUP_CONCAT(DISTINCT c.column_name) AS columnName,MAX(t.create_time) AS createTime
         FROM information_schema.tables t LEFT JOIN information_schema.columns c ON t.table_name = c.table_name
         WHERE t.table_schema = (SELECT DATABASE()) AND t.table_name LIKE 'mscode%'
         <if test="tableName != null and tableName != ''">
@@ -72,9 +73,9 @@
 
     <insert id="insertGeneratorField">
         INSERT INTO mscode_generator_field
-            (id, field_type, field, generator_id)
+            (id, field_type, field, generator_id, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{fieldType,jdbcType=VARCHAR}, #{field,jdbcType=VARCHAR}, #{generatorId,jdbcType=BIGINT})
+            (#{id,jdbcType=BIGINT}, #{fieldType,jdbcType=VARCHAR}, #{field,jdbcType=VARCHAR}, #{generatorId,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <update id="updateGenerator" parameterType="Generator">
@@ -85,7 +86,7 @@
 			<if test="tableName != null and tableName != ''">table_name=#{tableName},</if>
 			<if test="serviceName != null and serviceName != ''">service_name=#{serviceName},</if>
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteGenerator">
@@ -93,6 +94,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
     <delete id="deleteGeneratorField">
@@ -100,6 +102,7 @@
 		<foreach item="generatorId" collection="array" open="(" separator="," close=")">
 			#{generatorId,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

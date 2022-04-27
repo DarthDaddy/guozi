@@ -52,6 +52,7 @@
     <select id="queryOrgId" resultType="Long">
         SELECT id
         FROM mscode_sys_org
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysOrg" parameterType="SysOrg">
@@ -70,7 +71,7 @@
             org_description=#{orgDescription,jdbcType=VARCHAR},
             org_sequence=#{orgSequence,jdbcType=BIGINT}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysOrg">
@@ -78,6 +79,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

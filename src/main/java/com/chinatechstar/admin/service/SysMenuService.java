@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysMenu;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 菜单信息的业务逻辑接口层
@@ -139,4 +140,10 @@ public interface SysMenuService {
 	 */
 	void deleteDataField(String roleCode, String menuCode);
 
+	/**
+	 * 导入菜单
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysMenu(MultipartFile file);
 }

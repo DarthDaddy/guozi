@@ -27,7 +27,7 @@
     <select id="getSysParamByParamName" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_param
-        WHERE param_name = #{paramName,jdbcType=VARCHAR}
+        WHERE param_name = #{paramName,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysParam" parameterType="SysParam">
@@ -43,7 +43,7 @@
             <if test="paramKey != null and paramKey != ''">param_key=#{paramKey},</if>
             param_value=#{paramValue,jdbcType=VARCHAR}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysParam">
@@ -51,6 +51,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

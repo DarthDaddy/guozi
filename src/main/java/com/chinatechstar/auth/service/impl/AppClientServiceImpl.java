@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 应用信息的业务逻辑实现层
@@ -90,7 +92,7 @@ public class AppClientServiceImpl implements AppClientService {
 	 */
 	@Override
 	public void insertAppClient(AppClient appClient) {
-		Integer existing = appClientMapper.getAppClientByClientCode(appClient.getId(), appClient.getClientCode().trim());
+		Integer existing = appClientMapper.getAppClientByClientCode(appClient.getId(), appClient.getClientCode().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("应用编码已存在");
 		}
@@ -105,6 +107,7 @@ public class AppClientServiceImpl implements AppClientService {
 	 */
 	@Override
 	public void updateAppClient(AppClient appClient) {
+		appClient.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		appClientMapper.updateAppClient(appClient);
 		logger.info("应用已编辑： {}", appClient.getClientCode());
 	}
@@ -114,7 +117,30 @@ public class AppClientServiceImpl implements AppClientService {
 	 */
 	@Override
 	public void deleteAppClient(Long[] id) {
-		appClientMapper.deleteAppClient(id);
+		appClientMapper.deleteAppClient(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入应用
+	 */
+	@Override
+	public void importAppClient(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			AppClient appClient = new AppClient();
+			appClient.setClientCode(data.get(0) == null ? "" : data.get(0));
+			appClient.setClientSecret(data.get(1) == null ? "" : data.get(1));
+			appClient.setAuthType(data.get(2) == null ? "" : data.get(2));
+			appClient.setAuthScope(data.get(3) == null ? "" : data.get(3));
+			appClient.setTokenSeconds(data.get(4) == null ? 0L : Long.valueOf(data.get(4)));
+			appClient.setRefreshSeconds(data.get(5) == null ? 0L : Long.valueOf(data.get(5)));
+			appClient.setFallbackUrl(data.get(6) == null ? "" : data.get(6));
+			appClient.setClientDescription(data.get(7) == null ? "" : data.get(7));
+			insertAppClient(appClient);
+		}
 	}
 
 }

@@ -3,8 +3,12 @@ package com.chinatechstar.account.service.impl;
 import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpSession;
+
+import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -46,11 +50,19 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	private EmailController emailServiceClient;
 
 	/**
+	 * 根据用户名或手机号查询用户的租户编码
+	 */
+	@Override
+	public String getTenantCodeByUser(String username, String mobile) {
+		return sysUserDetailMapper.getTenantCodeByUser(username, mobile);
+	}
+
+	/**
 	 * 查询当前用户的角色
 	 */
 	@Override
 	public List<String> getRoleCodeBySysUser(String username, String mobile) {
-		return sysUserDetailMapper.getRoleCodeBySysUser(username, mobile);
+		return sysUserDetailMapper.getRoleCodeBySysUser(username, mobile, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -58,7 +70,7 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> querySysMenuAuthorityTree(String username, String mobile, String parentId, String postCode, Long userId) {
-		List<LinkedHashMap<String, Object>> totalList = sysUserDetailMapper.querySysMenuAuthorityTree(username, mobile, postCode, userId);
+		List<LinkedHashMap<String, Object>> totalList = sysUserDetailMapper.querySysMenuAuthorityTree(username, mobile, postCode, userId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		List<LinkedHashMap<String, Object>> resultList = RecursiveListUtils.queryMenuRecursiveList(totalList);
 		if (StringUtils.isNotBlank(parentId)) {
 			resultList = resultList.stream().filter(map -> String.valueOf(map.get("id")).equals(parentId)).collect(Collectors.toList());
@@ -71,7 +83,7 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	 */
 	@Override
 	public List<String> queryRoleMenuButton(String username, String mobile) {
-		return sysUserDetailMapper.queryRoleMenuButton(username, mobile);
+		return sysUserDetailMapper.queryRoleMenuButton(username, mobile, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -94,6 +106,8 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 		sysUser.setPassword(encoder.encode(sysUser.getPassword()));
 		sysUser.setProvinceRegionCode("440000");
 		sysUser.setCityRegionCode("440100");
+		String tenantCode = String.valueOf(new Random().nextInt(99999999));
+		sysUser.setTenantCode(tenantCode);
 		sysUserDetailMapper.insertSysUser(sysUser);
 		logger.info("用户已新增： {}", sysUser.getUsername());
 	}
@@ -103,6 +117,7 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	 */
 	@Override
 	public void updateSysUserDetail(SysUserDetail sysUser) {
+		sysUser.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysUserDetailMapper.updateSysUserDetail(sysUser);
 		logger.info("用户详细信息已编辑： {}", sysUser.getId());
 	}
@@ -113,17 +128,17 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	@Override
 	public void updateSysUserInfo(String fieldValue, String field, Long id) {
 		if ("mobile".equals(field)) {
-			Integer existing = sysUserDetailMapper.getSysUserByIdEmailMobile(id, null, fieldValue.trim());
+			Integer existing = sysUserDetailMapper.getSysUserByIdEmailMobile(id, null, fieldValue.trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			if (existing != null && existing > 0) {
 				throw new IllegalArgumentException("手机号已存在，修改失败");
 			}
 		} else if ("email".equals(field)) {
-			Integer existing = sysUserDetailMapper.getSysUserByIdEmailMobile(id, fieldValue.trim(), null);
+			Integer existing = sysUserDetailMapper.getSysUserByIdEmailMobile(id, fieldValue.trim(), null, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			if (existing != null && existing > 0) {
 				throw new IllegalArgumentException("邮箱已存在，修改失败");
 			}
 		}
-		sysUserDetailMapper.updateSysUserInfo(fieldValue, field, id);
+		sysUserDetailMapper.updateSysUserInfo(fieldValue, field, id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		logger.info("用户信息已编辑： {}", id);
 	}
 
@@ -132,11 +147,11 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	 */
 	@Override
 	public void updatePassword(String password, String newPassword, Long id) {
-		String oldPassword = sysUserDetailMapper.getPasswordById(id);
+		String oldPassword = sysUserDetailMapper.getPasswordById(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (!encoder.matches(password, oldPassword)) {
 			throw new IllegalArgumentException("原密码不正确");
 		}
-		sysUserDetailMapper.updateSysUserInfo(encoder.encode(newPassword), "password", id);
+		sysUserDetailMapper.updateSysUserInfo(encoder.encode(newPassword), "password", id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		logger.info("用户密码已修改： {}", id);
 	}
 
@@ -159,7 +174,7 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 			if (!clientResponse.isSuccess()) {
 				throw new ServiceException(clientResponse.toString());
 			}
-			sysUserDetailMapper.updatePasswordByEmail(encoder.encode(newPassword), email);
+			sysUserDetailMapper.updatePasswordByEmail(encoder.encode(newPassword), email, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		} else {
 			throw new IllegalArgumentException("图片验证码错误或已过期，请重新输入");
 		}
@@ -170,13 +185,12 @@ public class SysUserDetailServiceImpl implements SysUserDetailService {
 	 * 比对验证码
 	 */
 	@Override
-	public void compareCaptcha(String charCaptcha) {
-		String charCaptchaKey = ApplicationConstants.CHAR_CAPTCHA_PREFIX + "anonymousUser";
-		String charCaptchaCache = redisUtils.get(charCaptchaKey);
+	public void compareCaptcha(HttpSession session, String charCaptcha) {
+		String charCaptchaCache = (String) session.getAttribute(session.getId());
 		if (!charCaptcha.equalsIgnoreCase(charCaptchaCache)) {
 			throw new IllegalArgumentException("图片验证码错误或已过期，请重新输入");
 		}
-		redisUtils.del(charCaptchaKey);
+		session.removeAttribute(session.getId());
 	}
 
 }

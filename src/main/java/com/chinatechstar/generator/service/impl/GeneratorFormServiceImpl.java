@@ -61,7 +61,7 @@ public class GeneratorFormServiceImpl implements GeneratorFormService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = generatorFormMapper.queryGeneratorForm(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("generatorform", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("generatorform", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -94,6 +94,7 @@ public class GeneratorFormServiceImpl implements GeneratorFormService {
 	 */
 	@Override
 	public void updateGeneratorForm(GeneratorForm generatorForm) {
+		generatorForm.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		generatorFormMapper.updateGeneratorForm(generatorForm);
 		logger.info("表单已编辑： {}", generatorForm.getId());
 	}
@@ -103,6 +104,6 @@ public class GeneratorFormServiceImpl implements GeneratorFormService {
 	 */
 	@Override
 	public void deleteGeneratorForm(Long[] id) {
-		generatorFormMapper.deleteGeneratorForm(id);
+		generatorFormMapper.deleteGeneratorForm(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 }

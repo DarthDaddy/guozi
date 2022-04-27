@@ -34,13 +34,13 @@
     <select id="getSysUrlByUrl" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_url
-        WHERE url = #{url,jdbcType=VARCHAR}
+        WHERE url = #{url,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryRoleIdByUrlId" resultType="String">
         SELECT CAST(role_id AS CHAR) AS "roleId"
         FROM mscode_sys_role_url
-        WHERE url_id = #{urlId,jdbcType=BIGINT}
+        WHERE url_id = #{urlId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryRoleUrl" resultType="String">
@@ -52,7 +52,7 @@
     <select id="queryUrlIdByRoleId" resultType="String">
         SELECT CAST(url_id AS CHAR) AS "urlId"
         FROM mscode_sys_role_url
-        WHERE role_id = #{roleId,jdbcType=BIGINT}
+        WHERE role_id = #{roleId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysUrl" parameterType="SysUrl">
@@ -64,9 +64,9 @@
 
     <insert id="insertUrlIdRoleId">
         INSERT INTO mscode_sys_role_url
-            (id, url_id, role_id)
+            (id, url_id, role_id, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{urlId,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT})
+            (#{id,jdbcType=BIGINT}, #{urlId,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <update id="updateSysUrl" parameterType="SysUrl">
@@ -75,7 +75,7 @@
             <if test="url != null and url != ''">url=#{url},</if>
             description=#{description,jdbcType=VARCHAR}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysUrl">
@@ -85,14 +85,15 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND mscode_sys_url.tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
     <delete id="deleteUrlRole">
-        DELETE FROM mscode_sys_role_url WHERE url_id = #{urlId,jdbcType=BIGINT}
+        DELETE FROM mscode_sys_role_url WHERE url_id = #{urlId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
     <delete id="deleteRoleUrl">
-        DELETE FROM mscode_sys_role_url WHERE role_id = #{roleId,jdbcType=BIGINT}
+        DELETE FROM mscode_sys_role_url WHERE role_id = #{roleId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

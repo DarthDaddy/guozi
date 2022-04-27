@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysRegion;
 
 /**
@@ -27,30 +28,33 @@ public interface SysRegionMapper {
 	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> querySysRegionTree(String tenantCode);
+	List<LinkedHashMap<String, Object>> querySysRegionTree(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询全部省份数据
-	 * 
+	 *
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryProvince();
+	List<LinkedHashMap<String, Object>> queryProvince(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据省份代码查询对应地市数据
-	 * 
-	 * @param province 省份代码
+	 *
+	 * @param province   省份代码
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryCity(String province);
+	List<LinkedHashMap<String, Object>> queryCity(@Param(value = "province") String province, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询是否已存在此区域代码
-	 * 
+	 *
 	 * @param regionCode 区域代码
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getSysRegionByRegionCode(String regionCode);
+	Integer getSysRegionByRegionCode(@Param(value = "regionCode") String regionCode, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增区域
@@ -72,8 +76,9 @@ public interface SysRegionMapper {
 	 * 删除区域
 	 * 
 	 * @param regionCode 区域代码
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteSysRegion(String[] regionCode);
+	int deleteSysRegion(@Param(value = "array") String[] regionCode, @Param(value = "tenantCode") String tenantCode);
 
 }

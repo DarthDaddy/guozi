@@ -37,19 +37,19 @@
     <select id="queryProvince" resultType="java.util.LinkedHashMap">
         SELECT region_name AS "name",region_code AS "id"
         FROM mscode_sys_region
-        WHERE region_type = 'province'
+        WHERE region_type = 'province' AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryCity" resultType="java.util.LinkedHashMap">
         SELECT region_name AS "name",region_code AS "id"
         FROM mscode_sys_region
-        WHERE parent_region_code = #{province,jdbcType=VARCHAR}
+        WHERE parent_region_code = #{province,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="getSysRegionByRegionCode" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_region
-        WHERE region_code = #{regionCode,jdbcType=VARCHAR}
+        WHERE region_code = #{regionCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <insert id="insertSysRegion" parameterType="SysRegion">
@@ -66,7 +66,7 @@
             <if test="regionType != null and regionType != ''">region_type=#{regionType},</if>
             <if test="parentRegionCode != null and parentRegionCode != ''">parent_region_code=#{parentRegionCode},</if>
         </set>
-        WHERE region_code=#{regionCode,jdbcType=VARCHAR}
+        WHERE region_code=#{regionCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysRegion">
@@ -74,6 +74,7 @@
         <foreach item="regionCode" collection="array" open="(" separator="," close=")">
             #{regionCode,jdbcType=VARCHAR}
         </foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

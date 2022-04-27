@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysParam;
 
 /**
@@ -23,11 +24,12 @@ public interface SysParamMapper {
 
 	/**
 	 * 查询是否已存在此参数名称
-	 * 
-	 * @param paramName 参数名称
+	 *
+	 * @param paramName  参数名称
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getSysParamByParamName(String paramName);
+	Integer getSysParamByParamName(@Param(value = "paramName") String paramName, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增参数
@@ -47,10 +49,11 @@ public interface SysParamMapper {
 
 	/**
 	 * 删除参数
-	 * 
-	 * @param id 参数ID
+	 *
+	 * @param id         参数ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteSysParam(Long[] id);
+	int deleteSysParam(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import com.chinatechstar.component.commons.result.ResultBuilder;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.UpdateValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 菜单信息的控制层
@@ -58,7 +61,6 @@ public class SysMenuController {
 
 	/**
 	 * 查询菜单的树数据
-	 *
 	 * 
 	 * @return
 	 */
@@ -232,7 +234,7 @@ public class SysMenuController {
 	}
 
 	/**
-	 * 根据查询条件导出菜单
+	 * 根据查询条件导出菜单到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -240,9 +242,72 @@ public class SysMenuController {
 	@PostMapping(path = "/exportSysMenu")
 	public void exportSysMenu(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "菜单编码", "菜单名称", "菜单图标", "菜单路由", "菜单组件", "排序", "菜单状态", "菜单状态名称", "上级菜单ID", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("菜单编码", "菜单名称", "菜单图标", "菜单路由", "菜单组件", "排序", "菜单状态", "上级菜单ID");
+				ExcelUtils.exportExcel(headList, null, "菜单管理", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "菜单编码", "菜单名称", "菜单图标", "菜单路由", "菜单组件", "排序", "菜单状态", "菜单状态名称", "上级菜单ID", "创建时间");
+				List<LinkedHashMap<String, Object>> dataList = sysMenuService.querySysMenuForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "菜单管理", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入菜单
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysMenu", consumes = {"multipart/form-data"})
+	public ActionResult importSysMenu(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysMenuService.importSysMenu(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出菜单到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysMenu")
+	public void exportWordSysMenu(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysMenu(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出菜单到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysMenu")
+	public void exportPDFSysMenu(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysMenu(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出菜单到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonSysMenu(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("菜单编码", "菜单名称", "菜单图标", "菜单路由", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = sysMenuService.querySysMenuForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "菜单管理", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "menuComponent".equals(entry.getKey()) || "menuSequence".equals(entry.getKey()) || "menuStatus".equals(entry.getKey()) || "menuStatusCn".equals(entry.getKey()) || "parentId".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "菜单管理", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "菜单管理", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.chinatechstar.component.commons.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +23,9 @@ import com.chinatechstar.admin.mapper.SysRoleMapper;
 import com.chinatechstar.admin.mapper.SysUserMapper;
 import com.chinatechstar.admin.service.SysDictService;
 import com.chinatechstar.admin.service.SysOrgService;
-import com.chinatechstar.component.commons.result.PaginationBuilder;
-import com.chinatechstar.component.commons.utils.CollectionUtils;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
-import com.chinatechstar.component.commons.utils.RecursiveListUtils;
-import com.chinatechstar.component.commons.utils.SequenceGenerator;
+import com.chinatechstar.component.commons.result.PaginationBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 机构信息的业务逻辑实现层
@@ -70,7 +69,7 @@ public class SysOrgServiceImpl implements SysOrgService {
 		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		List<LinkedHashMap<String, Object>> totalList = sysOrgMapper.querySysOrg(paramMap);
-		String roleData = sysRoleMapper.queryRoleData("sysorg", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysorg", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			totalList = CollectionUtils.convertFilterList(totalList, roleDataArray);
@@ -115,16 +114,16 @@ public class SysOrgServiceImpl implements SysOrgService {
 		List<LinkedHashMap<String, Object>> totalList = sysOrgMapper.queryOrgUserTree(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		// 获取机构和其包含的用户
-		List<Long> orgIdList = sysOrgMapper.queryOrgId();
+		List<Long> orgIdList = sysOrgMapper.queryOrgId(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Map<Long, String> orgUserMap = new HashMap<>();
 		for (int i = 0; i < orgIdList.size(); i++) {
 			Long orgId = orgIdList.get(i);
-			List<String> userIdList = sysUserMapper.queryUserIdByOrgId(orgId, roleId, assign);
+			List<String> userIdList = sysUserMapper.queryUserIdByOrgId(orgId, roleId, assign, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			orgUserMap.put(orgId, StringUtils.join(userIdList.toArray(), ","));
 		}
 
 		// 获取用户名和昵称，以用户名作为键
-		List<LinkedHashMap<String, Object>> usernameNicknameList = sysUserMapper.queryUsernameNickname();
+		List<LinkedHashMap<String, Object>> usernameNicknameList = sysUserMapper.queryUsernameNickname(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Map<String, String> usernameNicknameMap = new HashMap<>();
 		for (int i = 0; i < usernameNicknameList.size(); i++) {
 			String usernameNicknameKey = null;
@@ -153,7 +152,7 @@ public class SysOrgServiceImpl implements SysOrgService {
 		List<LinkedHashMap<String, Object>> totalList = sysOrgMapper.queryOrgUserTree(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		// 获取机构和其包含的用户
-		List<Long> orgIdList = sysOrgMapper.queryOrgId();
+		List<Long> orgIdList = sysOrgMapper.queryOrgId(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Map<Long, String> orgUserMap = new HashMap<>();
 		for (int i = 0; i < orgIdList.size(); i++) {
 			Long orgId = orgIdList.get(i);
@@ -162,7 +161,7 @@ public class SysOrgServiceImpl implements SysOrgService {
 		}
 
 		// 获取用户名和昵称，以用户名作为键
-		List<LinkedHashMap<String, Object>> usernameNicknameList = sysUserMapper.queryUsernameNickname();
+		List<LinkedHashMap<String, Object>> usernameNicknameList = sysUserMapper.queryUsernameNickname(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Map<String, String> usernameNicknameMap = new HashMap<>();
 		for (int i = 0; i < usernameNicknameList.size(); i++) {
 			String usernameNicknameKey = null;
@@ -210,6 +209,7 @@ public class SysOrgServiceImpl implements SysOrgService {
 		if (sysOrg.getId().longValue() == sysOrg.getParentId().longValue()) {
 			throw new IllegalArgumentException("当前节点不能作为自身的父节点");
 		}
+		sysOrg.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysOrgMapper.updateSysOrg(sysOrg);
 		logger.info("机构已编辑： {}", sysOrg.getOrgName());
 	}
@@ -224,7 +224,27 @@ public class SysOrgServiceImpl implements SysOrgService {
 			ids.add(id[i]);
 			getRecursiveIds(id[i], ids);
 		}
-		sysOrgMapper.deleteSysOrg(ids.stream().toArray(Long[]::new));
+		sysOrgMapper.deleteSysOrg(ids.stream().toArray(Long[]::new), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入机构
+	 */
+	@Override
+	public void importSysOrg(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysOrg sysOrg = new SysOrg();
+			sysOrg.setOrgName(data.get(0) == null ? "" : data.get(0));
+			sysOrg.setOrgType(data.get(1) == null ? "" : data.get(1));
+			sysOrg.setOrgDescription(data.get(2) == null ? "" : data.get(2));
+			sysOrg.setOrgSequence(data.get(3) == null ? 0L : Long.valueOf(data.get(3)));
+			sysOrg.setParentId(data.get(4) == null ? 0L : Long.valueOf(data.get(4)));
+			insertSysOrg(sysOrg);
+		}
 	}
 
 	/**

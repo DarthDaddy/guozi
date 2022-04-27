@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.file.entity.File;
 
 /**
@@ -31,28 +32,31 @@ public interface FileMapper {
 
 	/**
 	 * 新增文件与系统用户关联记录
-	 * 
-	 * @param id        文件与系统用户关联ID
-	 * @param fileId    文件ID
-	 * @param sysUserId 系统用户ID
+	 *
+	 * @param id         文件与系统用户关联ID
+	 * @param fileId     文件ID
+	 * @param sysUserId  系统用户ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int insertFileSysUser(Long id, Long fileId, Long sysUserId);
+	int insertFileSysUser(@Param(value = "id") Long id, @Param(value = "fileId") Long fileId, @Param(value = "sysUserId") Long sysUserId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 删除文件
-	 * 
-	 * @param id 文件ID
+	 *
+	 * @param id         文件ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteFile(Long[] id);
+	int deleteFile(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询下载URL列表
-	 * 
-	 * @param id 文件ID
+	 *
+	 * @param id         文件ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<String> queryUrlList(Long[] id);
+	List<String> queryUrlList(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }

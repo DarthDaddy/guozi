@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysRegion;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 区域信息的业务逻辑接口层
@@ -83,4 +84,10 @@ public interface SysRegionService {
 	 */
 	void deleteSysRegion(String[] regionCode);
 
+	/**
+	 * 导入区域
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysRegion(MultipartFile file);
 }

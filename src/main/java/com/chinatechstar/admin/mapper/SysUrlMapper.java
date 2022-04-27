@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysUrl;
 
 /**
@@ -23,35 +24,38 @@ public interface SysUrlMapper {
 
 	/**
 	 * 查询是否已存在此接口
-	 * 
-	 * @param url URL
+	 *
+	 * @param url        URL
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getSysUrlByUrl(String url);
+	Integer getSysUrlByUrl(@Param(value = "url") String url, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据接口ID查询对应的角色ID
-	 * 
-	 * @param urlId 接口ID
+	 *
+	 * @param urlId      接口ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<String> queryRoleIdByUrlId(Long urlId);
+	List<String> queryRoleIdByUrlId(@Param(value = "urlId") Long urlId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询角色编码对应的接口
-	 * 
-	 * @param roleCode 角色编码
+	 *
+	 * @param roleCode   角色编码
 	 * @return
 	 */
-	List<String> queryRoleUrl(String roleCode);
+	List<String> queryRoleUrl(@Param(value = "roleCode") String roleCode);
 
 	/**
 	 * 根据角色ID查询对应的接口ID
-	 * 
-	 * @param roleId 角色ID
+	 *
+	 * @param roleId     角色ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<String> queryUrlIdByRoleId(Long roleId);
+	List<String> queryUrlIdByRoleId(@Param(value = "roleId") Long roleId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增接口
@@ -63,13 +67,14 @@ public interface SysUrlMapper {
 
 	/**
 	 * 将接口授权给角色
-	 * 
-	 * @param id     接口与角色关联ID
-	 * @param urlId  接口ID
-	 * @param roleId 角色ID
+	 *
+	 * @param id         接口与角色关联ID
+	 * @param urlId      接口ID
+	 * @param roleId     角色ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	void insertUrlIdRoleId(Long id, Long urlId, Long roleId);
+	void insertUrlIdRoleId(@Param(value = "id") Long id, @Param(value = "urlId") Long urlId, @Param(value = "roleId") Long roleId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 编辑接口
@@ -81,26 +86,29 @@ public interface SysUrlMapper {
 
 	/**
 	 * 删除接口
-	 * 
-	 * @param id 接口ID
+	 *
+	 * @param id         接口ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteSysUrl(Long[] id);
+	int deleteSysUrl(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据接口ID删除接口与角色关联信息
-	 * 
-	 * @param urlId 接口ID
+	 *
+	 * @param urlId      接口ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteUrlRole(Long urlId);
+	int deleteUrlRole(@Param(value = "urlId") Long urlId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据角色ID删除接口与角色关联信息
-	 * 
-	 * @param roleId 角色ID
+	 *
+	 * @param roleId     角色ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteRoleUrl(Long roleId);
+	int deleteRoleUrl(@Param(value = "roleId") Long roleId, @Param(value = "tenantCode") String tenantCode);
 
 }

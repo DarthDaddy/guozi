@@ -46,6 +46,7 @@
         <if test="id != null">
             AND id != #{id}
         </if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertAppClient" parameterType="AppClient">
@@ -66,7 +67,7 @@
             <if test="fallbackUrl != null and fallbackUrl != ''">fallback_url=#{fallbackUrl},</if>
             client_description=#{clientDescription,jdbcType=VARCHAR},
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteAppClient">
@@ -74,6 +75,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

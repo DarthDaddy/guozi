@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysUrl;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 接口信息的业务逻辑接口层
@@ -88,4 +89,10 @@ public interface SysUrlService {
 	 */
 	void deleteSysUrl(Long[] id);
 
+	/**
+	 * 导入接口
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysUrl(MultipartFile file);
 }

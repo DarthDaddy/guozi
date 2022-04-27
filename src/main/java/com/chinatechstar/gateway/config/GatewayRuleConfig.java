@@ -45,7 +45,6 @@ public class GatewayRuleConfig {
 				add(new ApiPathPredicateItem().setPattern("/api/statistics/**").setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
 				add(new ApiPathPredicateItem().setPattern("/api/activiti/**").setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
 				add(new ApiPathPredicateItem().setPattern("/api/generator/**").setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
-				add(new ApiPathPredicateItem().setPattern("/api/environment/**").setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
 			}
 		});
 		ApiDefinition api2 = new ApiDefinition("another_api").setPredicateItems(new HashSet<ApiPredicateItem>() {
@@ -92,10 +91,6 @@ public class GatewayRuleConfig {
 		rules.add(new GatewayFlowRule("mscode-activiti-service").setCount(1000).setIntervalSec(1));
 		rules.add(new GatewayFlowRule("mscode-activiti-service").setCount(200).setIntervalSec(2).setBurst(200)
 				.setParamItem(new GatewayParamFlowItem().setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_CLIENT_IP)));
-		rules.add(new GatewayFlowRule("mscode-environment-service").setCount(1000).setIntervalSec(1));
-		rules.add(new GatewayFlowRule("mscode-environment-service").setCount(200).setIntervalSec(2).setBurst(200)
-				.setParamItem(new GatewayParamFlowItem().setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_CLIENT_IP)));
-
 
 		rules.add(new GatewayFlowRule("mscode-generator-service").setCount(1000).setIntervalSec(1));
 		rules.add(new GatewayFlowRule("mscode-generator-service").setCount(200).setIntervalSec(2).setBurst(200)

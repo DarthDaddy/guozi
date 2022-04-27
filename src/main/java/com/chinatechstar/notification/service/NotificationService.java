@@ -73,5 +73,4 @@ public interface NotificationService {
 	 */
 	void deleteNotification(Long[] id);
 
-	List<Notification> queryNotifications();
 }

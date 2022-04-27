@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysTenant;
-import com.chinatechstar.admin.vo.SysTenantVO;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 租户信息的业务逻辑接口层
@@ -59,11 +59,10 @@ public interface SysTenantService {
 	 */
 	void deleteSysTenant(Long[] id);
 
-    List<SysTenantVO> querySysTenants();
-
-    List<SysTenant> querySysTenantByCurrent(String tenantCode);
-
-    List<SysTenant> querySysTenantList();
-
-    List<SysTenantVO> querySysTenantVo();
+	/**
+	 * 导入租户
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysTenant(MultipartFile file);
 }

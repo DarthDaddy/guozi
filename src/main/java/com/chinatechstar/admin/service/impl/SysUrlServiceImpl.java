@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 接口信息的业务逻辑实现层
@@ -69,7 +71,7 @@ public class SysUrlServiceImpl implements SysUrlService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = sysUrlMapper.querySysUrl(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("sysurl", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysurl", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -91,7 +93,7 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public List<String> queryRoleIdByUrlId(Long urlId) {
-		return sysUrlMapper.queryRoleIdByUrlId(urlId);
+		return sysUrlMapper.queryRoleIdByUrlId(urlId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -99,7 +101,7 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public List<String> queryUrlIdByRoleId(Long roleId) {
-		return sysUrlMapper.queryUrlIdByRoleId(roleId);
+		return sysUrlMapper.queryUrlIdByRoleId(roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -107,7 +109,7 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public void insertSysUrl(SysUrl sysUrl) {
-		Integer existing = sysUrlMapper.getSysUrlByUrl(sysUrl.getUrl().trim());
+		Integer existing = sysUrlMapper.getSysUrlByUrl(sysUrl.getUrl().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("接口已存在");
 		}
@@ -122,9 +124,9 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public void insertUrlIdRoleId(Long urlId, Long[] roleId) {
-		sysUrlMapper.deleteUrlRole(urlId);
+		sysUrlMapper.deleteUrlRole(urlId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		for (int i = 0; i < roleId.length; i++) {
-			sysUrlMapper.insertUrlIdRoleId(Long.valueOf(sequenceGenerator.nextId()), urlId, roleId[i]);
+			sysUrlMapper.insertUrlIdRoleId(Long.valueOf(sequenceGenerator.nextId()), urlId, roleId[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 		refreshRedis();
 	}
@@ -134,9 +136,9 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public void insertRoleIdUrlId(Long[] urlId, Long roleId) {
-		sysUrlMapper.deleteRoleUrl(roleId);
+		sysUrlMapper.deleteRoleUrl(roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		for (int i = 0; i < urlId.length; i++) {
-			sysUrlMapper.insertUrlIdRoleId(Long.valueOf(sequenceGenerator.nextId()), urlId[i], roleId);
+			sysUrlMapper.insertUrlIdRoleId(Long.valueOf(sequenceGenerator.nextId()), urlId[i], roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 		refreshRedis();
 	}
@@ -158,6 +160,7 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public void updateSysUrl(SysUrl sysUrl) {
+		sysUrl.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysUrlMapper.updateSysUrl(sysUrl);
 		logger.info("接口已编辑： {}", sysUrl.getUrl());
 	}
@@ -167,7 +170,24 @@ public class SysUrlServiceImpl implements SysUrlService {
 	 */
 	@Override
 	public void deleteSysUrl(Long[] id) {
-		sysUrlMapper.deleteSysUrl(id);
+		sysUrlMapper.deleteSysUrl(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入接口
+	 */
+	@Override
+	public void importSysUrl(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysUrl sysUrl = new SysUrl();
+			sysUrl.setUrl(data.get(0) == null ? "" : data.get(0));
+			sysUrl.setDescription(data.get(1) == null ? "" : data.get(1));
+			insertSysUrl(sysUrl);
+		}
 	}
 
 }

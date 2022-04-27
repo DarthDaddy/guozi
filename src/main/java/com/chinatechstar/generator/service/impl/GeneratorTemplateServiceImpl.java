@@ -76,7 +76,7 @@ public class GeneratorTemplateServiceImpl implements GeneratorTemplateService {
 	 */
 	@Override
 	public String queryGeneratorTemplateContent(String type, String item) {
-		return generatorTemplateMapper.queryGeneratorTemplateContent(type, item);
+		return generatorTemplateMapper.queryGeneratorTemplateContent(type, item, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class GeneratorTemplateServiceImpl implements GeneratorTemplateService {
 	 */
 	@Override
 	public void insertGeneratorTemplate(GeneratorTemplate generatorTemplate) {
-		Integer existing = generatorTemplateMapper.getGeneratorTemplateByType(generatorTemplate.getType().trim());
+		Integer existing = generatorTemplateMapper.getGeneratorTemplateByType(generatorTemplate.getType().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("模板类型已存在");
 		}
@@ -123,7 +123,7 @@ public class GeneratorTemplateServiceImpl implements GeneratorTemplateService {
 			treeMap.put(String.valueOf(generatorTemplateList.get(i).get("type")) + String.valueOf(generatorTemplateList.get(i).get("item")),
 					String.valueOf(generatorTemplateList.get(i).get("content")));
 		}
-		generatorTemplateMapper.deleteGeneratorTemplate(new String[] { generatorTemplate.getType() });
+		generatorTemplateMapper.deleteGeneratorTemplate(new String[] { generatorTemplate.getType() }, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		for (int i = 0; i < itemArray.length; i++) {
 			GeneratorTemplate entity = new GeneratorTemplate();
 			entity.setId(sequenceGenerator.nextId());
@@ -150,7 +150,7 @@ public class GeneratorTemplateServiceImpl implements GeneratorTemplateService {
 	 */
 	@Override
 	public void deleteGeneratorTemplate(String[] type) {
-		generatorTemplateMapper.deleteGeneratorTemplate(type);
+		generatorTemplateMapper.deleteGeneratorTemplate(type, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 }

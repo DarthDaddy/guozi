@@ -96,7 +96,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 	@Override
 	public Map<String, Object> queryFieldByGeneratorId(GeneratorFieldVO generatorFieldVO) {
 		Map<String, Object> resultMap = new HashMap<>();
-		List<LinkedHashMap<String, Object>> resultList = generatorMapper.queryFieldByGeneratorId(generatorFieldVO.getGeneratorId());
+		List<LinkedHashMap<String, Object>> resultList = generatorMapper.queryFieldByGeneratorId(generatorFieldVO.getGeneratorId(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		resultMap.put("list", resultList);
 		resultMap.put("count", resultList.size());
 		return resultMap;
@@ -156,8 +156,9 @@ public class GeneratorServiceImpl implements GeneratorService {
 	 */
 	@Override
 	public void updateGenerator(Generator generator) {
-		generatorMapper.deleteGeneratorField(new Long[] { generator.getId() });
+		generatorMapper.deleteGeneratorField(new Long[] { generator.getId() }, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		insertGeneratorField(generator);
+		generator.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		generatorMapper.updateGenerator(generator);
 		logger.info("代码信息已编辑： {}", generator.getServiceName());
 	}
@@ -168,7 +169,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 	private void insertGeneratorField(Generator generator) {
 		for (int i = 0; i < generator.getGeneratorField().size(); i++) {
 			generatorMapper.insertGeneratorField(sequenceGenerator.nextId(), generator.getGeneratorField().get(i).getFieldType(),
-					generator.getGeneratorField().get(i).getField(), generator.getId());
+					generator.getGeneratorField().get(i).getField(), generator.getId(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 	}
 
@@ -177,8 +178,8 @@ public class GeneratorServiceImpl implements GeneratorService {
 	 */
 	@Override
 	public void deleteGenerator(Long[] id) {
-		generatorMapper.deleteGenerator(id);
-		generatorMapper.deleteGeneratorField(id);
+		generatorMapper.deleteGenerator(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		generatorMapper.deleteGeneratorField(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -187,10 +188,10 @@ public class GeneratorServiceImpl implements GeneratorService {
 	public byte[] generateResource(Long[] id, String type) {
 		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 				ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);) {
-			List<LinkedHashMap<String, Object>> codeList = generatorMapper.queryGeneratorById(id);
+			List<LinkedHashMap<String, Object>> codeList = generatorMapper.queryGeneratorById(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			for (int i = 0; i < codeList.size(); i++) {
-				GeneratorUtils.generateResource(codeList.get(i), generatorMapper.queryFieldByGeneratorId(Long.valueOf(codeList.get(i).get("id").toString())),
-						generatorTemplateMapper.queryTemplateByType(type), zipOutputStream);
+				GeneratorUtils.generateResource(codeList.get(i), generatorMapper.queryFieldByGeneratorId(Long.valueOf(codeList.get(i).get("id").toString()), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode")),
+						generatorTemplateMapper.queryTemplateByType(type, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode")), zipOutputStream);
 			}
 			zipOutputStream.close();
 			return byteArrayOutputStream.toByteArray();
@@ -221,7 +222,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 					fieldList.add(columnNameMap);
 				}
 			}
-			GeneratorUtils.generateResource(codeMap, fieldList, generatorTemplateMapper.queryTemplateByType(type), zipOutputStream);
+			GeneratorUtils.generateResource(codeMap, fieldList, generatorTemplateMapper.queryTemplateByType(type, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode")), zipOutputStream);
 			zipOutputStream.close();
 			return byteArrayOutputStream.toByteArray();
 		} catch (Exception e) {

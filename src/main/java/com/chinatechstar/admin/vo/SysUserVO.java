@@ -24,6 +24,7 @@ public class SysUserVO extends CommonVO implements Serializable {
 	private Long orgId;// 机构ID
 	private String nickname;// 昵称
 	private String mobile;// 手机号
+	private String tenantCode;// 租户编码
 
 	public String getUsername() {
 		return username;
@@ -87,6 +88,14 @@ public class SysUserVO extends CommonVO implements Serializable {
 
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
+	}
+
+	public String getTenantCode() {
+		return tenantCode;
+	}
+
+	public void setTenantCode(String tenantCode) {
+		this.tenantCode = tenantCode;
 	}
 
 }

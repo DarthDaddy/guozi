@@ -93,9 +93,7 @@ public class OAuth2AuthorizationConfig extends AuthorizationServerConfigurerAdap
 				.withClient("mscode-chart-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER).and()
 				.withClient("mscode-admin-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER).and()
 				.withClient("mscode-activiti-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER).and()
-				.withClient("mscode-generator-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER).and()
-				.withClient("mscode-environment-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER);
-
+				.withClient("mscode-generator-service").secret(SECRET).authorizedGrantTypes(CLIENT_CREDENTIALS, REFRESH_TOKEN).scopes(SERVER);
 
 		clientDetailsServiceConfigurer.withClientDetails(clientDetailsService());
 	}

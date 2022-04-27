@@ -19,24 +19,6 @@ public class FileVO extends CommonVO implements Serializable {
 	private String content;// 文件字符串内容
 	private String contentType;// 数据类型
 	private String fileType;// 文件类型
-	private String tenantCode;//企业
-	private String url;// 下载URL
-
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public String getTenantCode() {
-		return tenantCode;
-	}
-
-	public void setTenantCode(String tenantCode) {
-		this.tenantCode = tenantCode;
-	}
 
 	public Long getId() {
 		return id;

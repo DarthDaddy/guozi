@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.generator.entity.Generator;
 
 /**
@@ -23,19 +24,21 @@ public interface GeneratorMapper {
 
 	/**
 	 * 根据ID查询代码信息
-	 * 
-	 * @param id 代码信息ID
+	 *
+	 * @param id         代码信息ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryGeneratorById(Long[] id);
+	List<LinkedHashMap<String, Object>> queryGeneratorById(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据代码信息ID查询对应的实体字段
-	 * 
+	 *
 	 * @param generatorId 代码信息ID
+	 * @param tenantCode  租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryFieldByGeneratorId(Long generatorId);
+	List<LinkedHashMap<String, Object>> queryFieldByGeneratorId(@Param(value = "generatorId") Long generatorId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询数据表信息分页或导出数据
@@ -55,14 +58,15 @@ public interface GeneratorMapper {
 
 	/**
 	 * 新增实体字段信息
-	 * 
+	 *
 	 * @param id          实体字段ID
 	 * @param fieldType   类型
 	 * @param field       实体字段
 	 * @param generatorId 代码信息ID
+	 * @param tenantCode  租户编码
 	 * @return
 	 */
-	int insertGeneratorField(Long id, String fieldType, String field, Long generatorId);
+	int insertGeneratorField(@Param(value = "id") Long id, @Param(value = "fieldType") String fieldType, @Param(value = "field") String field, @Param(value = "generatorId") Long generatorId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 编辑代码信息
@@ -74,18 +78,20 @@ public interface GeneratorMapper {
 
 	/**
 	 * 删除代码信息
-	 * 
-	 * @param id 代码信息ID
+	 *
+	 * @param id         代码信息ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteGenerator(Long[] id);
+	int deleteGenerator(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 删除实体字段信息
-	 * 
+	 *
 	 * @param generatorId 代码信息ID
+	 * @param tenantCode  租户编码
 	 * @return
 	 */
-	int deleteGeneratorField(Long[] generatorId);
+	int deleteGeneratorField(@Param(value = "array") Long[] generatorId, @Param(value = "tenantCode") String tenantCode);
 
 }

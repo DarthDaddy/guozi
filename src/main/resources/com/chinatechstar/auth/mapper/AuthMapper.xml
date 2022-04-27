@@ -5,8 +5,8 @@
 <mapper namespace="com.chinatechstar.auth.mapper.AuthMapper">
 
     <select id="getSysUser" resultType="java.util.LinkedHashMap">
-        SELECT CAST(msu.id AS CHAR) AS "id",msu.username AS "username",msu.nickname AS "nickname",msu.phone AS "phone",msu.mobile AS "mobile",msu.email AS "email",msu.province_regioncode AS "provinceRegionCode",msrp.region_name AS "provinceRegionName",msu.city_regioncode AS "cityRegionCode",msrc.region_name AS "cityRegionName",msu.address AS "address",msu.profile AS "profile",msu.notify_message AS "notifyMessage",msu.notify_todo AS "notifyTodo",msu.avatar AS "avatar",GROUP_CONCAT(msr.role_code) AS "roles"
-        FROM mscode_sys_user msu LEFT JOIN mscode_sys_region msrp ON msu.province_regioncode = msrp.region_code LEFT JOIN mscode_sys_region msrc ON msu.city_regioncode = msrc.region_code LEFT JOIN mscode_sys_role_user msru ON msu.id = msru.user_id LEFT JOIN mscode_sys_role msr ON msr.id = msru.role_id
+        SELECT CAST(msu.id AS CHAR) AS "id",msu.username AS "username",msu.nickname AS "nickname",msu.phone AS "phone",msu.mobile AS "mobile",msu.email AS "email",msu.province_regioncode AS "provinceRegionCode",msrp.region_name AS "provinceRegionName",msu.city_regioncode AS "cityRegionCode",msrc.region_name AS "cityRegionName",msu.address AS "address",msu.profile AS "profile",msu.notify_message AS "notifyMessage",msu.notify_todo AS "notifyTodo",msu.avatar AS "avatar",msu.tenant_code AS "tenantCode",mst.tenant_name AS "tenantName",GROUP_CONCAT(DISTINCT msr.role_code) AS "roles"
+        FROM mscode_sys_user msu LEFT JOIN mscode_sys_region msrp ON msu.province_regioncode = msrp.region_code LEFT JOIN mscode_sys_region msrc ON msu.city_regioncode = msrc.region_code LEFT JOIN mscode_sys_role_user msru ON msu.id = msru.user_id LEFT JOIN mscode_sys_role msr ON msr.id = msru.role_id LEFT JOIN mscode_sys_tenant mst ON msu.tenant_code = mst.tenant_code
         WHERE msu.username = #{username,jdbcType=VARCHAR}
     </select>
 

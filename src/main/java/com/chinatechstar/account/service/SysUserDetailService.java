@@ -3,6 +3,8 @@ package com.chinatechstar.account.service;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import com.chinatechstar.account.entity.SysUserDetail;
 
 /**
@@ -11,6 +13,15 @@ import com.chinatechstar.account.entity.SysUserDetail;
  * @版权所有 广东国星科技有限公司 www.mscodecloud.com
  */
 public interface SysUserDetailService {
+
+	/**
+	 * 根据用户名或手机号查询用户的租户编码
+	 *
+	 * @param username 用户名
+	 * @param mobile   手机号
+	 * @return
+	 */
+	String getTenantCodeByUser(String username, String mobile);
 
 	/**
 	 * 查询当前用户的角色
@@ -86,8 +97,9 @@ public interface SysUserDetailService {
 	/**
 	 * 比对验证码
 	 * 
+	 * @param session     请求会话
 	 * @param charCaptcha 验证码字符
 	 */
-	void compareCaptcha(String charCaptcha);
+	void compareCaptcha(HttpSession session, String charCaptcha);
 
 }

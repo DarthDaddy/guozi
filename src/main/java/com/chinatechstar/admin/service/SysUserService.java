@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysUser;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户信息的业务逻辑接口层
@@ -31,7 +32,7 @@ public interface SysUserService {
 
 	/**
 	 * 查询用户分页
-	 * 
+	 *
 	 * @param currentPage 当前页数
 	 * @param pageSize    每页记录数
 	 * @param username    用户名
@@ -40,11 +41,12 @@ public interface SysUserService {
 	 * @param roleId      角色ID
 	 * @param nickname    昵称
 	 * @param mobile      手机号
+	 * @param tenantCode  租户编码
 	 * @param sorter      排序
 	 * @return
 	 */
 	Map<String, Object> querySysUser(Integer currentPage, Integer pageSize, String username, String status, Long orgId, Long[] roleId, String nickname,
-			String mobile, String sorter);
+			String mobile, String tenantCode, String sorter);
 
 	/**
 	 * 查询用户的导出数据列表
@@ -69,6 +71,13 @@ public interface SysUserService {
 	 * @return
 	 */
 	List<Long> querySysUserId(String[] username);
+
+	/**
+	 * 注册用户并初始化
+	 *
+	 * @param sysUser 用户对象
+	 */
+	void insertSysUserInitial(SysUser sysUser);
 
 	/**
 	 * 新增用户
@@ -99,5 +108,12 @@ public interface SysUserService {
 	 * @param id 用户ID
 	 */
 	void deleteSysUser(Long[] id);
+
+	/**
+	 * 导入用户
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysUser(MultipartFile file);
 
 }

@@ -27,12 +27,14 @@ public class CurrentUserUtils {
 	public static Map<String, String> getOAuth2AuthenticationDetailsInfo() {
 		Map<String, String> oauth2AuthenticationMap = new HashMap<>();
 		OAuth2Authentication oauth2Authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
-		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) oauth2Authentication
-				.getUserAuthentication();
-		String tenantCode = (String) ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) usernamePasswordAuthenticationToken.getDetails())
-				.get("userAuthentication")).get("details")).get("tenantCode");
-		oauth2AuthenticationMap.put("tenantCode", tenantCode);
-		oauth2AuthenticationMap.put("name", oauth2Authentication.getName());
+		if (oauth2Authentication != null) {
+			UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) oauth2Authentication
+					.getUserAuthentication();
+			String tenantCode = (String) ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) usernamePasswordAuthenticationToken.getDetails())
+					.get("userAuthentication")).get("details")).get("tenantCode");
+			oauth2AuthenticationMap.put("tenantCode", tenantCode);
+			oauth2AuthenticationMap.put("name", oauth2Authentication.getName());
+		}
 		return oauth2AuthenticationMap;
 	}
 
@@ -44,11 +46,12 @@ public class CurrentUserUtils {
 	public static Map<String, String> getOAuth2AuthenticationInfo() {
 		Map<String, String> oauth2AuthenticationMap = new HashMap<>();
 		OAuth2Authentication oauth2Authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
-		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) oauth2Authentication
-				.getUserAuthentication();
-		String tenantCode = (String) ((LinkedHashMap<?, ?>) usernamePasswordAuthenticationToken.getDetails()).get("tenantCode");
-		oauth2AuthenticationMap.put("tenantCode", tenantCode);
-		oauth2AuthenticationMap.put("name", oauth2Authentication.getName());
+		if (oauth2Authentication != null) {
+			UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken) oauth2Authentication.getUserAuthentication();
+			String tenantCode = (String) ((LinkedHashMap<?, ?>) usernamePasswordAuthenticationToken.getDetails()).get("tenantCode");
+			oauth2AuthenticationMap.put("tenantCode", tenantCode);
+			oauth2AuthenticationMap.put("name", oauth2Authentication.getName());
+		}
 		return oauth2AuthenticationMap;
 	}
 

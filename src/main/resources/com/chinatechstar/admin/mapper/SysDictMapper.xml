@@ -45,27 +45,27 @@
     <select id="queryDictByDictType" resultType="java.util.LinkedHashMap">
         SELECT dict_name AS "name",dict_value AS "value"
         FROM mscode_sys_dict
-        WHERE dict_type = #{dictType,jdbcType=VARCHAR} AND parent_id != 0
+        WHERE dict_type = #{dictType,jdbcType=VARCHAR} AND parent_id != 0 AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
         ORDER BY dict_sequence ASC
     </select>
 
     <select id="queryDictByDictTypeCheckbox" resultType="java.util.LinkedHashMap">
         SELECT dict_name AS "label",dict_value AS "value"
         FROM mscode_sys_dict
-        WHERE dict_type = #{dictType,jdbcType=VARCHAR} AND parent_id != 0
+        WHERE dict_type = #{dictType,jdbcType=VARCHAR} AND parent_id != 0 AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
         ORDER BY dict_sequence ASC
     </select>
 
-    <select id="getDictTypeByParentId" parameterType="long" resultType="String">
+    <select id="getDictTypeByParentId" resultType="String">
         SELECT dict_type AS "dictType"
         FROM mscode_sys_dict
-        WHERE id = #{parentId,jdbcType=BIGINT}
+        WHERE id = #{parentId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="getSysDictByDictType" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_dict
-        WHERE dict_type = #{dictType,jdbcType=VARCHAR}
+        WHERE dict_type = #{dictType,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <insert id="insertSysDict" parameterType="SysDict">
@@ -83,7 +83,7 @@
             <if test="parentId != null">parent_id=#{parentId},</if>
             dict_sequence=#{dictSequence,jdbcType=BIGINT}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysDict">
@@ -91,6 +91,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.chinatechstar.component.commons.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,9 @@ import com.chinatechstar.admin.entity.SysDict;
 import com.chinatechstar.admin.mapper.SysDictMapper;
 import com.chinatechstar.admin.mapper.SysRoleMapper;
 import com.chinatechstar.admin.service.SysDictService;
-import com.chinatechstar.component.commons.result.PaginationBuilder;
-import com.chinatechstar.component.commons.utils.CollectionUtils;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
-import com.chinatechstar.component.commons.utils.RecursiveListUtils;
-import com.chinatechstar.component.commons.utils.SequenceGenerator;
+import com.chinatechstar.component.commons.result.PaginationBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 字典信息的业务逻辑实现层
@@ -64,7 +63,7 @@ public class SysDictServiceImpl implements SysDictService {
 		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		List<LinkedHashMap<String, Object>> totalList = sysDictMapper.querySysDict(paramMap);
-		String roleData = sysRoleMapper.queryRoleData("sysdict", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysdict", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			totalList = CollectionUtils.convertFilterList(totalList, roleDataArray);
@@ -103,7 +102,7 @@ public class SysDictServiceImpl implements SysDictService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> queryDictByDictType(String dictType) {
-		return sysDictMapper.queryDictByDictType(dictType);
+		return sysDictMapper.queryDictByDictType(dictType, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -111,7 +110,7 @@ public class SysDictServiceImpl implements SysDictService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> queryDictByDictTypeCheckbox(String dictType) {
-		return sysDictMapper.queryDictByDictTypeCheckbox(dictType);
+		return sysDictMapper.queryDictByDictTypeCheckbox(dictType, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -120,7 +119,7 @@ public class SysDictServiceImpl implements SysDictService {
 	@Override
 	public void insertSysDict(SysDict sysDict) {
 		if (sysDict.getParentId() == 0L) {
-			Integer existing = sysDictMapper.getSysDictByDictType(sysDict.getDictType().trim());
+			Integer existing = sysDictMapper.getSysDictByDictType(sysDict.getDictType().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			if (existing != null && existing > 0) {
 				throw new IllegalArgumentException("字典类型已存在");
 			}
@@ -141,6 +140,7 @@ public class SysDictServiceImpl implements SysDictService {
 			throw new IllegalArgumentException("当前节点不能作为自身的父节点");
 		}
 		validateDict(sysDict);
+		sysDict.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysDictMapper.updateSysDict(sysDict);
 		logger.info("字典已编辑： {}", sysDict.getDictType());
 	}
@@ -152,7 +152,7 @@ public class SysDictServiceImpl implements SysDictService {
 	 */
 	private void validateDict(SysDict sysDict) {
 		if (sysDict.getParentId() != 0L) {
-			String dictType = sysDictMapper.getDictTypeByParentId(sysDict.getParentId());
+			String dictType = sysDictMapper.getDictTypeByParentId(sysDict.getParentId(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			if (!sysDict.getDictType().equals(dictType)) {
 				throw new IllegalArgumentException("子节点的字典类型要跟父节点的字典类型相同");
 			}
@@ -169,7 +169,27 @@ public class SysDictServiceImpl implements SysDictService {
 			ids.add(id[i]);
 			getRecursiveIds(id[i], ids);
 		}
-		sysDictMapper.deleteSysDict(ids.stream().toArray(Long[]::new));
+		sysDictMapper.deleteSysDict(ids.stream().toArray(Long[]::new), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入字典
+	 */
+	@Override
+	public void importSysDict(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysDict sysDict = new SysDict();
+			sysDict.setDictName(data.get(0) == null ? "" : data.get(0));
+			sysDict.setDictValue(data.get(1) == null ? "" : data.get(1));
+			sysDict.setDictType(data.get(2) == null ? "" : data.get(2));
+			sysDict.setDictSequence(data.get(3) == null ? 0L : Long.valueOf(data.get(3)));
+			sysDict.setParentId(data.get(4) == null ? 0L : Long.valueOf(data.get(4)));
+			insertSysDict(sysDict);
+		}
 	}
 
 	/**

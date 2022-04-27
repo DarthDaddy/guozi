@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import com.chinatechstar.component.commons.result.ResultBuilder;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.UpdateValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 接口信息的控制层
@@ -144,7 +147,7 @@ public class SysUrlController {
 	}
 
 	/**
-	 * 根据查询条件导出接口
+	 * 根据查询条件导出接口到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -152,9 +155,72 @@ public class SysUrlController {
 	@PostMapping(path = "/exportSysUrl")
 	public void exportSysUrl(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "URL", "描述", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("URL", "描述");
+				ExcelUtils.exportExcel(headList, null, "接口权限", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "URL", "描述", "创建时间");
+				List<LinkedHashMap<String, Object>> dataList = sysUrlService.querySysUrlForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "接口权限", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入接口
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysUrl", consumes = {"multipart/form-data"})
+	public ActionResult importSysUrl(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysUrlService.importSysUrl(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出接口到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysUrl")
+	public void exportWordSysUrl(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysUrl(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出接口到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysUrl")
+	public void exportPDFSysUrl(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysUrl(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出接口到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonSysUrl(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("URL", "描述", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = sysUrlService.querySysUrlForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "接口权限", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "接口权限", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "接口权限", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

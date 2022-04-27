@@ -80,6 +80,16 @@ public class ModelServiceImpl implements ModelService, ModelDataJsonConstants {
 	}
 
 	/**
+	 * 获取模型XML
+	 */
+	@Override
+	public String getModelResource(String modelId) {
+		Model modelData = repositoryService.getModel(modelId);
+		byte[] bpmnBytes = repositoryService.getModelEditorSource(modelData.getId());
+		return new String(bpmnBytes);
+	}
+
+	/**
 	 * 新增模型
 	 */
 	public void addModel(String name, String category, String description, String orgId, String menuCode, String[] referGroupId, String[][] userId) {
@@ -106,16 +116,15 @@ public class ModelServiceImpl implements ModelService, ModelDataJsonConstants {
 	 * 编辑模型
 	 */
 	@Override
-	public void updateModel(String modelId, String name, String category, String orgId, String menuCode, String[] referGroupId, String[][] userId)
+	public void updateModel(String modelId, String name, String category, String orgId, String description, String[] referGroupId, String[][] userId)
 			throws IOException {
 		Model model = repositoryService.getModel(modelId);
 		ObjectNode modelJson = (ObjectNode) objectMapper.readTree(model.getMetaInfo());
 		modelJson.put(MODEL_ORGID, orgId);
-		modelJson.put(MODEL_MENUCODE, menuCode);
+		modelJson.put(MODEL_DESCRIPTION, description);
 		modelJson.put(MODEL_NAME, name);
 		model.setMetaInfo(modelJson.toString());
 		model.setOrgId(orgId);
-		model.setMenuCode(menuCode);
 		model.setName(name);
 		model.setCategory(category);
 		modelMapper.deleteModelSysOrg(modelId);

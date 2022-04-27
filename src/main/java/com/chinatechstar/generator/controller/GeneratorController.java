@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +66,7 @@ public class GeneratorController {
 	/**
 	 * 根据代码信息ID查询对应的实体字段
 	 * 
-	 * @param generatorId 代码信息ID
+	 * @param generatorFieldVO 实体字段信息的参数
 	 * @return
 	 */
 	@GetMapping(path = "/queryFieldByGeneratorId")
@@ -123,7 +125,7 @@ public class GeneratorController {
 	}
 
 	/**
-	 * 根据查询条件导出代码信息
+	 * 根据查询条件导出代码信息到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -131,16 +133,62 @@ public class GeneratorController {
 	@PostMapping(path = "/exportGenerator")
 	public void exportGenerator(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "包名", "实体名", "表名", "服务名", "创建时间", "实体字段");
+			List<String> headList = Arrays.asList("ID", "包名", "实体名", "表名", "服务名", "实体字段", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = generatorService.queryGeneratorForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "代码信息管理", response);
+			ExcelUtils.exportExcel(headList, dataList, "代码信息", response);
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}
 	}
 
 	/**
-	 * 根据查询条件导出数据表信息
+	 * 根据查询条件导出代码信息到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordGenerator")
+	public void exportWordGenerator(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGenerator(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出代码信息到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFGenerator")
+	public void exportPDFGenerator(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGenerator(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出代码信息到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonGenerator(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("包名", "实体名", "表名", "服务名", "创建时间");
+			List<LinkedHashMap<String, Object>> dataList = generatorService.queryGeneratorForExcel(paramMap);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "fieldList".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "代码信息", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "代码信息", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 根据查询条件导出数据表信息到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -148,9 +196,55 @@ public class GeneratorController {
 	@PostMapping(path = "/exportGeneratorTable")
 	public void exportGeneratorTable(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("表名", "表注释", "创建时间", "表字段");
+			List<String> headList = Arrays.asList("表名", "表注释", "表字段", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = generatorService.queryGeneratorTableForExcel(paramMap);
 			ExcelUtils.exportExcel(headList, dataList, "数据表信息", response);
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 根据查询条件导出数据表信息到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordGeneratorTable")
+	public void exportWordGeneratorTable(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGeneratorTable(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出数据表信息到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFGeneratorTable")
+	public void exportPDFGeneratorTable(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGeneratorTable(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出数据表信息到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonGeneratorTable(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("表名", "表注释", "创建时间");
+			List<LinkedHashMap<String, Object>> dataList = generatorService.queryGeneratorTableForExcel(paramMap);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("columnName".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "数据表信息", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "数据表信息", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 参数信息的业务逻辑接口层
@@ -55,4 +56,10 @@ public interface SysParamService {
 	 */
 	void deleteSysParam(Long[] id);
 
+	/**
+	 * 导入参数
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysParam(MultipartFile file);
 }

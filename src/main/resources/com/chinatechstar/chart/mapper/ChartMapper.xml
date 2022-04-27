@@ -19,6 +19,9 @@
         <if test="startTime != null and endTime != null">
             AND time BETWEEN #{startTime} AND DATE_ADD(#{endTime},INTERVAL 1 DAY)
         </if>
+        <if test="tenantCode != null and tenantCode != ''">
+            AND tenant_code = #{tenantCode}
+        </if>
     </sql>
 
     <select id="queryProduct" parameterType="map" resultType="java.util.LinkedHashMap">
@@ -28,17 +31,19 @@
         <if test="salesType != null and salesType != ''">
             AND sales_type LIKE CONCAT('%',#{salesType},'%')
         </if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryVisitsList" resultType="map">
         SELECT DATE_FORMAT(time,'%Y-%m-%d') AS "x",visits AS "y"
         FROM mscode_product_statistics
-        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')
+        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m') AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryVisitsTrendList" resultType="map">
         SELECT CONCAT(MONTH(time) ,'月') AS "x",SUM(visits) AS "y"
         FROM mscode_product_statistics
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
         GROUP BY x
         ORDER BY MAX(time)
     </select>
@@ -56,27 +61,31 @@
     <select id="queryPaymentQuantityList" resultType="map">
         SELECT DATE_FORMAT(time,'%Y-%m-%d') AS "x",payment_quantity AS "y"
         FROM mscode_product_statistics
-        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')
+        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m') AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="querySearchList" resultType="map">
         SELECT id AS "index",keyword AS "keyword",user_count AS "count",gain AS "range",status AS "status"
         FROM mscode_product_statistics
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryCvrList" resultType="map">
         SELECT name AS "name",cvr AS "cvr"
         FROM mscode_product_statistics
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryFlowList" resultType="map">
         SELECT unix_timestamp(time) AS "x",flow AS "y1",payment_quantity AS "y2"
         FROM mscode_product_statistics
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="querySalesList" resultType="map">
         SELECT CONCAT(MONTH(time) ,'月') AS "x",SUM(sales) AS "y"
         FROM mscode_product_statistics
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
         GROUP BY x
         ORDER BY MAX(time)
     </select>
@@ -91,26 +100,27 @@
         LIMIT 7
     </select>
     
-    <select id="querySalesTypeList" parameterType="String" resultType="map">
+    <select id="querySalesTypeList" resultType="map">
         SELECT sales_type AS "x",SUM(sales) AS "y"
         FROM mscode_product_statistics
         WHERE 1 = 1
         <if test="channel != null and channel != ''">
             AND channel = #{channel,jdbcType=VARCHAR}
         </if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
         GROUP BY sales_type
     </select>
     
     <select id="queryUserCountList" resultType="map">
         SELECT DATE_FORMAT(time,'%Y-%m-%d') AS "x",user_count AS "y"
         FROM mscode_product_statistics
-        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')
+        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m') AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="queryPerCapitaUserCountList" resultType="map">
         SELECT DATE_FORMAT(time,'%Y-%m-%d') AS "x",visits/user_count AS "y"
         FROM mscode_product_statistics
-        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m')
+        WHERE DATE_FORMAT(time,'%Y%m') = DATE_FORMAT(CURDATE(),'%Y%m') AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
 </mapper>

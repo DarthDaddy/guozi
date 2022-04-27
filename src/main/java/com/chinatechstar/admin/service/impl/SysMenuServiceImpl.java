@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.chinatechstar.component.commons.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +25,9 @@ import com.chinatechstar.admin.mapper.SysMenuMapper;
 import com.chinatechstar.admin.mapper.SysRoleMapper;
 import com.chinatechstar.admin.service.SysDictService;
 import com.chinatechstar.admin.service.SysMenuService;
-import com.chinatechstar.component.commons.result.PaginationBuilder;
-import com.chinatechstar.component.commons.utils.CollectionUtils;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
-import com.chinatechstar.component.commons.utils.RecursiveListUtils;
-import com.chinatechstar.component.commons.utils.SequenceGenerator;
+import com.chinatechstar.component.commons.result.PaginationBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 菜单信息的业务逻辑实现层
@@ -73,7 +72,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		List<LinkedHashMap<String, Object>> totalList = sysMenuMapper.querySysMenu(paramMap);
-		String roleData = sysRoleMapper.queryRoleData("sysmenu", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysmenu", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			totalList = CollectionUtils.convertFilterList(totalList, roleDataArray);
@@ -119,11 +118,11 @@ public class SysMenuServiceImpl implements SysMenuService {
 		List<LinkedHashMap<String, Object>> totalList = sysMenuMapper.querySysMenuTree(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		// 获取菜单和其包含的按钮
-		List<String> menuCodeList = sysMenuMapper.queryMenuCode();
+		List<String> menuCodeList = sysMenuMapper.queryMenuCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Map<String, String> menuButtonMap = new HashMap<>();
 		for (int i = 0; i < menuCodeList.size(); i++) {
 			String menuCode = menuCodeList.get(i);
-			List<String> menuButtonList = sysMenuMapper.queryMenuButton(menuCode);
+			List<String> menuButtonList = sysMenuMapper.queryMenuButton(menuCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			menuButtonMap.put(menuCode, StringUtils.join(menuButtonList.toArray(), ","));
 		}
 
@@ -154,7 +153,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public List<String> queryMenuIdByRoleId(Long roleId) {
-		return sysMenuMapper.queryMenuIdByRoleId(roleId);
+		return sysMenuMapper.queryMenuIdByRoleId(roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -162,7 +161,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public List<String> queryMenuButtonByRoleCode(String roleCode) {
-		return sysMenuMapper.queryMenuButtonByRoleCode(roleCode);
+		return sysMenuMapper.queryMenuButtonByRoleCode(roleCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -178,7 +177,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public List<String> queryCheckedMenuButton(String menuCode) {
-		return sysMenuMapper.queryCheckedMenuButton(menuCode);
+		return sysMenuMapper.queryCheckedMenuButton(menuCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -194,11 +193,11 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public void insertSysMenu(SysMenu sysMenu) {
-		Integer existingMenuCode = sysMenuMapper.getSysMenuByMenuCode(sysMenu.getMenuCode());
+		Integer existingMenuCode = sysMenuMapper.getSysMenuByMenuCode(sysMenu.getMenuCode(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existingMenuCode != null && existingMenuCode > 0) {
 			throw new IllegalArgumentException("菜单编码已存在");
 		}
-		Integer existingMenuPath = sysMenuMapper.getSysMenuByIdMenuPath(null, sysMenu.getMenuPath());
+		Integer existingMenuPath = sysMenuMapper.getSysMenuByIdMenuPath(null, sysMenu.getMenuPath(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existingMenuPath != null && existingMenuPath > 0) {
 			throw new IllegalArgumentException("菜单路由已存在");
 		}
@@ -209,7 +208,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 		String[] menuButton = sysMenu.getMenuButton();
 		if (menuButton != null) {
 			for (int i = 0; i < menuButton.length; i++) {
-				sysMenuMapper.insertMenuButton(sequenceGenerator.nextId(), sysMenu.getMenuCode(), menuButton[i]);
+				sysMenuMapper.insertMenuButton(sequenceGenerator.nextId(), sysMenu.getMenuCode(), menuButton[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 
@@ -221,9 +220,9 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public void insertRoleIdMenuId(Long roleId, Long[] menuId) {
-		sysMenuMapper.deleteRoleMenu(roleId);
+		sysMenuMapper.deleteRoleMenu(roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (menuId != null && menuId.length > 0) {
-			Set<Long> parentIdSet = sysMenuMapper.queryParentIdById(menuId);
+			Set<Long> parentIdSet = sysMenuMapper.queryParentIdById(menuId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 
 			if (parentIdSet != null && parentIdSet.size() > 0) {
 				Set<Long> ids = new HashSet<>();
@@ -236,7 +235,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 			parentIdSet.addAll(Arrays.stream(menuId).collect(Collectors.toSet()));
 			Long[] newMenuId = parentIdSet.stream().toArray(Long[]::new);
 			for (int i = 0; i < newMenuId.length; i++) {
-				sysMenuMapper.insertRoleIdMenuId(Long.valueOf(sequenceGenerator.nextId()), roleId, newMenuId[i]);
+				sysMenuMapper.insertRoleIdMenuId(Long.valueOf(sequenceGenerator.nextId()), roleId, newMenuId[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 	}
@@ -248,7 +247,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 * @param ids         子节点id集
 	 */
 	private void getRecursiveMenuIds(Set<Long> parentIdSet, Set<Long> ids) {
-		Set<Long> newParentIdSet = sysMenuMapper.queryParentIdById(parentIdSet.stream().toArray(Long[]::new));
+		Set<Long> newParentIdSet = sysMenuMapper.queryParentIdById(parentIdSet.stream().toArray(Long[]::new), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Iterator<Long> iterator = newParentIdSet.iterator();
 		while (iterator.hasNext()) {
 			Long data = iterator.next();
@@ -264,13 +263,13 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public void insertRoleCodeMenuButton(String roleCode, String[] menuButton) {
-		sysMenuMapper.deleteRoleMenuButton(roleCode);
+		sysMenuMapper.deleteRoleMenuButton(roleCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (menuButton != null) {
 			for (int i = 0; i < menuButton.length; i++) {
 				if (!menuButton[i].contains(":")) {// 排除非菜单按钮节点
 					continue;
 				}
-				sysMenuMapper.insertRoleCodeMenuButton(Long.valueOf(sequenceGenerator.nextId()), roleCode, menuButton[i]);
+				sysMenuMapper.insertRoleCodeMenuButton(Long.valueOf(sequenceGenerator.nextId()), roleCode, menuButton[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 	}
@@ -280,8 +279,8 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public void insertRoleCodeMenuData(String roleCode, String menuCode, String dataField) {
-		sysMenuMapper.deleteRoleMenuData(roleCode, menuCode);
-		sysMenuMapper.insertRoleCodeMenuData(Long.valueOf(sequenceGenerator.nextId()), roleCode, menuCode, dataField);
+		sysMenuMapper.deleteRoleMenuData(roleCode, menuCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		sysMenuMapper.insertRoleCodeMenuData(Long.valueOf(sequenceGenerator.nextId()), roleCode, menuCode, dataField, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -292,17 +291,18 @@ public class SysMenuServiceImpl implements SysMenuService {
 		if (sysMenu.getId().longValue() == sysMenu.getParentId().longValue()) {
 			throw new IllegalArgumentException("当前节点不能作为自身的父节点");
 		}
-		Integer existing = sysMenuMapper.getSysMenuByIdMenuPath(sysMenu.getId(), sysMenu.getMenuPath().trim());
+		Integer existing = sysMenuMapper.getSysMenuByIdMenuPath(sysMenu.getId(), sysMenu.getMenuPath().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("菜单路由已存在");
 		}
+		sysMenu.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysMenuMapper.updateSysMenu(sysMenu);
 
 		String[] menuButton = sysMenu.getMenuButton();
 		if (menuButton != null) {
-			sysMenuMapper.deleteButtonByMenuCode(sysMenu.getMenuCode());
+			sysMenuMapper.deleteButtonByMenuCode(sysMenu.getMenuCode(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			for (int i = 0; i < menuButton.length; i++) {
-				sysMenuMapper.insertMenuButton(sequenceGenerator.nextId(), sysMenu.getMenuCode(), menuButton[i]);
+				sysMenuMapper.insertMenuButton(sequenceGenerator.nextId(), sysMenu.getMenuCode(), menuButton[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 
@@ -319,7 +319,7 @@ public class SysMenuServiceImpl implements SysMenuService {
 			ids.add(id[i]);
 			getRecursiveIds(id[i], ids);
 		}
-		sysMenuMapper.deleteSysMenu(ids.stream().toArray(Long[]::new));
+		sysMenuMapper.deleteSysMenu(ids.stream().toArray(Long[]::new), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -349,7 +349,30 @@ public class SysMenuServiceImpl implements SysMenuService {
 	 */
 	@Override
 	public void deleteDataField(String roleCode, String menuCode) {
-		sysMenuMapper.deleteRoleMenuData(roleCode, menuCode);
+		sysMenuMapper.deleteRoleMenuData(roleCode, menuCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入菜单
+	 */
+	@Override
+	public void importSysMenu(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysMenu sysMenu = new SysMenu();
+			sysMenu.setMenuCode(data.get(0) == null ? "" : data.get(0));
+			sysMenu.setMenuName(data.get(1) == null ? "" : data.get(1));
+			sysMenu.setMenuIcon(data.get(2) == null ? "" : data.get(2));
+			sysMenu.setMenuPath(data.get(3) == null ? "" : data.get(3));
+			sysMenu.setMenuComponent(data.get(4) == null ? "" : data.get(4));
+			sysMenu.setMenuSequence(data.get(5) == null ? 0L : Long.valueOf(data.get(5)));
+			sysMenu.setMenuStatus(data.get(6) == null ? 0 : Short.valueOf(data.get(6)));
+			sysMenu.setParentId(data.get(7) == null ? 0L : Long.valueOf(data.get(7)));
+			insertSysMenu(sysMenu);
+		}
 	}
 
 }

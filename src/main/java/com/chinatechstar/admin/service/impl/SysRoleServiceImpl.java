@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 角色信息的业务逻辑实现层
@@ -62,7 +64,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = sysRoleMapper.querySysRole(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("sysrole", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysrole", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -84,7 +86,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> queryRoleCode() {
-		return sysRoleMapper.queryRoleCode();
+		return sysRoleMapper.queryRoleCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -92,7 +94,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> queryRoleNameCheckbox() {
-		return sysRoleMapper.queryRoleNameCheckbox();
+		return sysRoleMapper.queryRoleNameCheckbox(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -108,7 +110,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public void insertSysRole(SysRole sysRole) {
-		Integer existing = sysRoleMapper.getSysRoleByRoleCode(sysRole.getRoleCode().trim());
+		Integer existing = sysRoleMapper.getSysRoleByRoleCode(sysRole.getRoleCode().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("角色编码已存在");
 		}
@@ -129,7 +131,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 				userIdSet.add(userId[x][y]);
 			}
 		}
-		sysRoleMapper.deleteSysRoleUser(null, roleId);
+		sysRoleMapper.deleteSysRoleUser(null, roleId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Iterator<String> iterator = userIdSet.iterator();
 		while (iterator.hasNext()) {
 			Long newUserId = null;
@@ -143,7 +145,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 			} else {
 				newUserId = Long.valueOf(data);
 			}
-			sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), roleId, newUserId, postCode);
+			sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), roleId, newUserId, postCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 	}
 
@@ -152,8 +154,27 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public void updateSysRole(SysRole sysRole) {
+		sysRole.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysRoleMapper.updateSysRole(sysRole);
 		logger.info("角色已编辑： {}", sysRole.getRoleCode());
+	}
+
+	/**
+	 * 导入角色
+	 */
+	@Override
+	public void importSysRole(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysRole sysRole = new SysRole();
+			sysRole.setRoleCode(data.get(0) == null ? "" : data.get(0));
+			sysRole.setRoleName(data.get(1) == null ? "" : data.get(1));
+			sysRole.setRoleDescription(data.get(2) == null ? "" : data.get(2));
+			insertSysRole(sysRole);
+		}
 	}
 
 	/**
@@ -161,9 +182,9 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public void deleteSysRole(Long[] id) {
-		sysRoleMapper.deleteSysRole(id);
+		sysRoleMapper.deleteSysRole(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		for (int i = 0; i < id.length; i++) {
-			sysRoleMapper.deleteSysRoleUser(null, id[i]);
+			sysRoleMapper.deleteSysRoleUser(null, id[i], CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 	}
 
@@ -172,7 +193,7 @@ public class SysRoleServiceImpl implements SysRoleService {
 	 */
 	@Override
 	public String queryRoleData(String menuCode, String username) {
-		return sysRoleMapper.queryRoleData(menuCode, username);
+		return sysRoleMapper.queryRoleData(menuCode, username, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 }

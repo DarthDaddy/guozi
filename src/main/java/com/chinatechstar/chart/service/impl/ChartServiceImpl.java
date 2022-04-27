@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -43,6 +44,7 @@ public class ChartServiceImpl implements ChartService {
 	public Map<String, Object> queryProduct(Integer currentPage, Integer pageSize, String salesType) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("salesType", salesType);
+		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		List<LinkedHashMap<String, Object>> resultList = chartMapper.queryProduct(paramMap);
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -71,20 +73,20 @@ public class ChartServiceImpl implements ChartService {
 		}
 
 		LinkedHashMap<String, Object> resultMap = new LinkedHashMap<>();
-		List<Map<String, Object>> visitsList = chartMapper.queryVisitsList();
-		List<Map<String, Object>> visitsTrendList = chartMapper.queryVisitsTrendList();
-		List<Map<String, Object>> paymentQuantityList = chartMapper.queryPaymentQuantityList();
-		List<Map<String, Object>> searchList = chartMapper.querySearchList();
-		List<Map<String, Object>> cvrList = chartMapper.queryCvrList();
-		List<Map<String, Object>> flowList = chartMapper.queryFlowList();
-		List<Map<String, Object>> salesList = chartMapper.querySalesList();
-		List<Map<String, Object>> salesTypeList = chartMapper.querySalesTypeList(null);
-		List<Map<String, Object>> salesTypeOnlineList = chartMapper.querySalesTypeList("线上");
-		List<Map<String, Object>> salesTypeOfflineList = chartMapper.querySalesTypeList("门店");
-		List<Map<String, Object>> salesRankingList = chartMapper.querySalesRankingList(startTime, endTime);
-		List<Map<String, Object>> visitsRankingList = chartMapper.queryVisitsRankingList(startTime, endTime);
-		List<Map<String, Object>> userCountList = chartMapper.queryUserCountList();
-		List<Map<String, Object>> perCapitaUserCountList = chartMapper.queryPerCapitaUserCountList();
+		List<Map<String, Object>> visitsList = chartMapper.queryVisitsList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> visitsTrendList = chartMapper.queryVisitsTrendList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> paymentQuantityList = chartMapper.queryPaymentQuantityList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> searchList = chartMapper.querySearchList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> cvrList = chartMapper.queryCvrList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> flowList = chartMapper.queryFlowList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> salesList = chartMapper.querySalesList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> salesTypeList = chartMapper.querySalesTypeList(null, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> salesTypeOnlineList = chartMapper.querySalesTypeList("线上", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> salesTypeOfflineList = chartMapper.querySalesTypeList("门店", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> salesRankingList = chartMapper.querySalesRankingList(startTime, endTime, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> visitsRankingList = chartMapper.queryVisitsRankingList(startTime, endTime, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> userCountList = chartMapper.queryUserCountList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<Map<String, Object>> perCapitaUserCountList = chartMapper.queryPerCapitaUserCountList(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 
 		NumberFormat numberFormat = NumberFormat.getPercentInstance();
 		Map<String, Object> analysisMap = new HashMap<>();

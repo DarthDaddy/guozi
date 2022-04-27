@@ -54,6 +54,7 @@
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id,jdbcType=BIGINT}
         </foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertFile" parameterType="File" useGeneratedKeys="true" keyProperty="id">
@@ -65,9 +66,9 @@
 
     <insert id="insertFileSysUser">
         INSERT INTO mscode_file_sysuser
-            (id, file_id, sysuser_id)
+            (id, file_id, sysuser_id, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{fileId,jdbcType=BIGINT}, #{sysUserId,jdbcType=BIGINT})
+            (#{id,jdbcType=BIGINT}, #{fileId,jdbcType=BIGINT}, #{sysUserId,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <delete id="deleteFile">
@@ -77,6 +78,7 @@
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id,jdbcType=BIGINT}
         </foreach>
+        AND mscode_file.tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

@@ -8,6 +8,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.account.entity.SysUserDetail;
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,7 @@ import com.chinatechstar.component.commons.validator.UpdateValidator;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户信息的控制层
@@ -89,7 +93,7 @@ public class SysUserController {
 	@GetMapping(path = "/querySysUser")
 	public ListResult<Object> querySysUser(SysUserVO sysUserVO) {
 		Map<String, Object> data = sysUserService.querySysUser(sysUserVO.getCurrentPage(), sysUserVO.getPageSize(), sysUserVO.getUsername(),
-				sysUserVO.getStatus(), sysUserVO.getOrgId(), sysUserVO.getRoleId(), sysUserVO.getNickname(), sysUserVO.getMobile(), sysUserVO.getSorter());
+				sysUserVO.getStatus(), sysUserVO.getOrgId(), sysUserVO.getRoleId(), sysUserVO.getNickname(), sysUserVO.getMobile(), sysUserVO.getTenantCode(), sysUserVO.getSorter());
 		return ResultBuilder.buildListSuccess(data);
 	}
 
@@ -102,6 +106,18 @@ public class SysUserController {
 	public ListResult<Object> queryUsername() {
 		List<LinkedHashMap<String, Object>> data = sysUserService.queryUsername(null);// 查询全部用户名
 		return ResultBuilder.buildListSuccess(data);
+	}
+
+	/**
+	 * 注册用户并初始化
+	 *
+	 * @param sysUser 用户对象
+	 * @return
+	 */
+	@PostMapping(path = "/registerAccountInitial")
+	public ActionResult registerAccountInitial(@Validated(InsertValidator.class) @RequestBody SysUser sysUser) {
+		sysUserService.insertSysUserInitial(sysUser);
+		return ResultBuilder.buildActionSuccess();
 	}
 
 	/**
@@ -153,7 +169,7 @@ public class SysUserController {
 	}
 
 	/**
-	 * 根据查询条件导出用户
+	 * 根据查询条件导出用户到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -161,9 +177,66 @@ public class SysUserController {
 	@PostMapping(path = "/exportSysUser")
 	public void exportSysUser(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "用户名", "昵称", "邮箱", "手机号", "手机号国家代码", "角色ID", "角色名称", "机构ID", "机构名称", "状态", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("用户名", "密码", "邮箱", "手机号", "手机号国家代码", "机构ID", "状态");
+				ExcelUtils.exportExcel(headList, null, "用户管理", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "用户名", "昵称", "邮箱", "手机号", "手机号国家代码", "角色ID", "角色名称", "机构ID", "机构名称", "状态", "创建时间", "岗位编码");
+				List<LinkedHashMap<String, Object>> dataList = sysUserService.querySysUserForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "用户管理", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入用户
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysUser", consumes = {"multipart/form-data"})
+	public ActionResult importSysUser(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysUserService.importSysUser(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出用户到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysUser")
+	public void exportWordSysUser(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		try {
+			List<String> headList = Arrays.asList("用户名", "昵称", "邮箱", "手机号", "机构名称", "状态");
 			List<LinkedHashMap<String, Object>> dataList = sysUserService.querySysUserForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "用户管理", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "prefix".equals(entry.getKey()) || "roleId".equals(entry.getKey()) || "roleIdCn".equals(entry.getKey()) || "orgId".equals(entry.getKey()) || "createTime".equals(entry.getKey()) || "postCode".equals(entry.getKey())));
+			});
+			WordUtils.exportWord(headList, dataList, "用户管理", response);
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 根据查询条件导出用户到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysUser")
+	public void exportPDFSysUser(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		try {
+			List<String> headList = Arrays.asList("用户名", "昵称", "邮箱", "手机号", "状态");
+			List<LinkedHashMap<String, Object>> dataList = sysUserService.querySysUserForExcel(paramMap);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "prefix".equals(entry.getKey()) || "roleId".equals(entry.getKey()) || "roleIdCn".equals(entry.getKey()) || "orgId".equals(entry.getKey()) || "orgIdCn".equals(entry.getKey()) || "createTime".equals(entry.getKey()) || "postCode".equals(entry.getKey())));
+			});
+			PDFUtils.exportPDF(headList, dataList, "用户管理", response);
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

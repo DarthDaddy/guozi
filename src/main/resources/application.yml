@@ -13,7 +13,7 @@ spring:
   application:
     name: mscode
   profiles:
-    active: native
+     active: native
   cloud:
     compatibility-verifier:
       enabled: false
@@ -37,14 +37,14 @@ spring:
             fallback: false
           ssl:
             enable: true
-    #data:
-    # mongodb:
-    #  uri: mongodb://root:123456@127.0.0.1:27017/mscode
+  data:
+    mongodb:
+      uri: mongodb://root:123456@127.0.0.1:27017/mscode
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://139.9.47.120:3306/mscode?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
-    username: mscode
+    url: jdbc:mysql://127.0.0.1:3306/mscode?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
+    username: root
     password: 123456
     druid:
       stat-view-servlet:
@@ -72,7 +72,7 @@ spring:
             multi-statement-allow: true
   thymeleaf:
     mode: LEGACYHTML5
-    cache: false
+    cache: false          
   activiti:
     check-process-definitions: false
     db-identity-used: true
@@ -84,15 +84,16 @@ spring:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
-  resources:
-    static-locations: classpath:static/upload/,file:static/upload/
+  web:
+    resources:
+      static-locations: classpath:static/upload/,file:static/upload/
   mvc:
     static-path-pattern: /static/upload/**
     pathmatch:
       matching-strategy: ant-path-matcher
 
 redis:
-  host: localhost
+  host: 127.0.0.1
   port: 6379
   password: 123456
   expiredTime: 86400
@@ -192,11 +193,6 @@ zuul:
       sensitiveHeaders:
     mscode-generator-service:
       path: /generator/**
-      url: http://127.0.0.1:10003
-      stripPrefix: true
-      sensitiveHeaders:
-    mscode-law-service:
-      path: /law/**
       url: http://127.0.0.1:10003
       stripPrefix: true
       sensitiveHeaders:

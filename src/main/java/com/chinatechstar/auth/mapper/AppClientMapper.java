@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.auth.entity.AppClient;
 
 /**
@@ -23,12 +24,13 @@ public interface AppClientMapper {
 
 	/**
 	 * 查询是否已存在此应用编码
-	 * 
+	 *
 	 * @param id         应用ID
 	 * @param clientCode 应用编码
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getAppClientByClientCode(Long id, String clientCode);
+	Integer getAppClientByClientCode(@Param(value = "id") Long id, @Param(value = "clientCode") String clientCode, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增应用
@@ -48,10 +50,11 @@ public interface AppClientMapper {
 
 	/**
 	 * 删除应用
-	 * 
-	 * @param id 应用ID
+	 *
+	 * @param id         应用ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteAppClient(Long[] id);
+	int deleteAppClient(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }

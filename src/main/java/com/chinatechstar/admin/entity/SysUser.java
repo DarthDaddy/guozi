@@ -47,6 +47,10 @@ public class SysUser extends TimeEntity implements Serializable {
 	@NotNull(groups = { InsertValidator.class, UpdateValidator.class })
 	private Short status;// 状态 0：禁用 1：正常
 	private String tenantCode;// 租户编码
+	private String captcha;// 验证码
+	private String provinceRegionCode;// 省份区域代码
+	private String cityRegionCode;// 地市区域代码
+	private String tenantName;// 租户名称
 
 	public Long getId() {
 		return id;
@@ -128,6 +132,38 @@ public class SysUser extends TimeEntity implements Serializable {
 		this.tenantCode = tenantCode;
 	}
 
+	public String getCaptcha() {
+		return captcha;
+	}
+
+	public void setCaptcha(String captcha) {
+		this.captcha = captcha;
+	}
+
+	public String getProvinceRegionCode() {
+		return provinceRegionCode;
+	}
+
+	public void setProvinceRegionCode(String provinceRegionCode) {
+		this.provinceRegionCode = provinceRegionCode;
+	}
+
+	public String getCityRegionCode() {
+		return cityRegionCode;
+	}
+
+	public void setCityRegionCode(String cityRegionCode) {
+		this.cityRegionCode = cityRegionCode;
+	}
+
+	public String getTenantName() {
+		return tenantName;
+	}
+
+	public void setTenantName(String tenantName) {
+		this.tenantName = tenantName;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)
@@ -146,7 +182,7 @@ public class SysUser extends TimeEntity implements Serializable {
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("id", id).add("username", username).add("password", password).add("email", email).add("mobile", mobile)
-				.add("prefix", prefix).add("roleId", roleId).add("orgId", orgId).add("status", status).add("tenantCode", tenantCode)
+				.add("prefix", prefix).add("roleId", roleId).add("orgId", orgId).add("status", status).add("tenantCode", tenantCode).add("captcha", captcha).add("provinceRegionCode", provinceRegionCode).add("cityRegionCode", cityRegionCode).add("tenantName", tenantName)
 				.add("createTime", super.getCreateTime()).toString();
 	}
 

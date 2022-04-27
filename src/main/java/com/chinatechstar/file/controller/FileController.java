@@ -48,7 +48,7 @@ public class FileController {
 	@GetMapping(path = "/queryFile")
 	public ListResult<Object> queryFile(FileVO fileVO) {
 		Map<String, Object> data = fileService.queryFile(fileVO.getCurrentPage(), fileVO.getPageSize(), fileVO.getId(), fileVO.getOriginalFilename(),
-				fileVO.getContent(), fileVO.getParentId(), fileVO.getPreviousId(), fileVO.getContentType(), fileVO.getFileType(), fileVO.getSorter(),fileVO.getTenantCode ());
+				fileVO.getContent(), fileVO.getParentId(), fileVO.getPreviousId(), fileVO.getContentType(), fileVO.getFileType(), fileVO.getSorter());
 		return ResultBuilder.buildListSuccess(data);
 	}
 
@@ -106,9 +106,8 @@ public class FileController {
 	@PostMapping(value = "/uploadFile", consumes = { "multipart/form-data" })
 	public ListResult<Object> uploadFile(@RequestParam(name = "file", required = true) MultipartFile file, @RequestParam(name = "id", required = true) Long id,
 			@RequestParam(name = "parentId", required = false) Long parentId, @RequestParam(name = "uploadType", required = false) String uploadType,
-										 @RequestParam(name = "tenantCode", required = false) String tenantCode,
 			@RequestParam(name = "fileType", required = false) String fileType) throws Exception {
-		String url = fileService.uploadFile(file, id, parentId, uploadType, fileType,tenantCode);
+		String url = fileService.uploadFile(file, id, parentId, uploadType, fileType);
 		return ResultBuilder.buildListSuccess(url);
 	}
 
@@ -129,6 +128,5 @@ public class FileController {
 			logger.warn(e.toString());
 		}
 	}
-
 
 }

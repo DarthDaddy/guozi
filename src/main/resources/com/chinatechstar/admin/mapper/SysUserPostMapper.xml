@@ -44,12 +44,13 @@
       	<if test="id != null">
     		AND id != #{id}
     	</if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="querySysUserPostTree" resultType="java.util.LinkedHashMap">
         SELECT post_name AS "name",post_code AS "value"
         FROM mscode_sys_user_post
-        WHERE user_id = #{userId,jdbcType=BIGINT}
+        WHERE user_id = #{userId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysUserPost" parameterType="SysUserPost">
@@ -66,7 +67,7 @@
             <if test="status != null">status=#{status},</if>
             post_description=#{postDescription,jdbcType=VARCHAR}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteSysUserPost">
@@ -75,6 +76,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

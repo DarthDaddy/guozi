@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,7 @@ import com.chinatechstar.component.commons.result.ResultBuilder;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.UpdateValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 区域信息的控制层
@@ -138,7 +141,7 @@ public class SysRegionController {
 	}
 
 	/**
-	 * 根据查询条件导出区域
+	 * 根据查询条件导出区域到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -146,9 +149,72 @@ public class SysRegionController {
 	@PostMapping(path = "/exportSysRegion")
 	public void exportSysRegion(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "区域名称", "区域代码", "区域类型", "区域类型名称", "上级区域代码", "上级区域ID", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("区域名称", "区域代码", "区域类型", "上级区域代码");
+				ExcelUtils.exportExcel(headList, null, "区域管理", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "区域名称", "区域代码", "区域类型", "区域类型名称", "上级区域代码", "上级区域ID", "创建时间");
+				List<LinkedHashMap<String, Object>> dataList = sysRegionService.querySysRegionForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "区域管理", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入区域
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysRegion", consumes = {"multipart/form-data"})
+	public ActionResult importSysRegion(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysRegionService.importSysRegion(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出区域到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysRegion")
+	public void exportWordSysRegion(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysRegion(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出区域到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysRegion")
+	public void exportPDFSysRegion(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysRegion(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出区域到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonSysRegion(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("区域名称", "区域代码", "区域类型名称", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = sysRegionService.querySysRegionForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "区域管理", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "regionType".equals(entry.getKey()) || "parentRegionCode".equals(entry.getKey()) || "parentId".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "区域管理", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "区域管理", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

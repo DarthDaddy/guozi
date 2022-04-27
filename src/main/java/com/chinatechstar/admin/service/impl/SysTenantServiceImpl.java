@@ -1,10 +1,12 @@
 package com.chinatechstar.admin.service.impl;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-import com.chinatechstar.admin.vo.SysTenantVO;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
-import com.chinatechstar.file.vo.FileVO;
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import com.chinatechstar.component.commons.utils.CollectionUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 租户信息的业务逻辑实现层
@@ -66,7 +69,7 @@ public class SysTenantServiceImpl implements SysTenantService {
 		List<LinkedHashMap<String, Object>> resultList = sysTenantMapper.querySysTenant(paramMap);
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String roleData = sysRoleMapper.queryRoleData("systenant", authentication.getName());
+		String roleData = sysRoleMapper.queryRoleData("systenant", authentication.getName(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -114,30 +117,24 @@ public class SysTenantServiceImpl implements SysTenantService {
 		sysTenantMapper.deleteSysTenant(id);
 	}
 
+	/**
+	 * 导入租户
+	 */
 	@Override
-	public List<SysTenantVO> querySysTenants() {
-		return sysTenantMapper.querySysTenants();
-	}
-
-	@Override
-	public List<SysTenant> querySysTenantByCurrent(String tenantCode) {
-		return sysTenantMapper.querySysTenantByCurrent(tenantCode);
-	}
-
-	@Override
-	public List<SysTenant> querySysTenantList() {
-		return sysTenantMapper.querySysTenantList();
-	}
-
-	@Override
-	public List<SysTenantVO> querySysTenantVo() {
-		String tenantCode = CurrentUserUtils.getOAuth2AuthenticationInfo ().get ( "tenantCode" );
-		SysTenantVO sysTenantVOS = sysTenantMapper.querySysTenantVo ( tenantCode );
-		List<FileVO> fileVOS = sysTenantMapper.queryFileListByTenantCode(tenantCode);
-		sysTenantVOS.setFileList ( fileVOS );
-		List<SysTenantVO> sysTenantVOSList= new ArrayList<> ();
-		sysTenantVOSList.add ( sysTenantVOS );
-		return sysTenantVOSList;
+	public void importSysTenant(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysTenant sysTenant = new SysTenant();
+			sysTenant.setTenantCode(data.get(0) == null ? "" : data.get(0));
+			sysTenant.setTenantName(data.get(1) == null ? "" : data.get(1));
+			sysTenant.setTenantContact(data.get(2) == null ? "" : data.get(2));
+			sysTenant.setTenantEmail(data.get(3) == null ? "" : data.get(3));
+			sysTenant.setTenantTel(data.get(4) == null ? "" : data.get(4));
+			insertSysTenant(sysTenant);
+		}
 	}
 
 }

@@ -56,6 +56,17 @@ public class ModelController {
 	}
 
 	/**
+	 * 获取模型XML
+	 *
+	 * @param modelId 模型ID
+	 * @return
+	 */
+	@PostMapping(path = "/getModelResource")
+	public ListResult<Object> getModelResource(@RequestParam(name = "modelId", required = true) String modelId) {
+		return ResultBuilder.buildListSuccess(modelService.getModelResource(modelId));
+	}
+
+	/**
 	 * 新增模型
 	 * 
 	 * @param modelEntity 模型对象
@@ -77,7 +88,7 @@ public class ModelController {
 	 */
 	@PutMapping(path = "/updateModel")
 	public ActionResult updateModel(@Validated(UpdateValidator.class) @RequestBody ModelEntity modelEntity) throws IOException {
-		modelService.updateModel(modelEntity.getModelId(), modelEntity.getName(), modelEntity.getCategory(), modelEntity.getOrgId(), modelEntity.getMenuCode(),
+		modelService.updateModel(modelEntity.getModelId(), modelEntity.getName(), modelEntity.getCategory(), modelEntity.getOrgId(), modelEntity.getDescription(),
 				modelEntity.getReferGroupId(), modelEntity.getUserId());
 		return ResultBuilder.buildActionSuccess();
 	}

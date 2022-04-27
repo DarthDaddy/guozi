@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.generator.entity.GeneratorTemplate;
 
 /**
@@ -31,28 +32,31 @@ public interface GeneratorTemplateMapper {
 
 	/**
 	 * 根据模板类型查询模板信息
-	 * 
-	 * @param type 模板类型
+	 *
+	 * @param type       模板类型
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryTemplateByType(String type);
+	List<LinkedHashMap<String, Object>> queryTemplateByType(@Param(value = "type") String type, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询模板内容
-	 * 
-	 * @param type 模板类型
-	 * @param item 模板项目
+	 *
+	 * @param type       模板类型
+	 * @param item       模板项目
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	String queryGeneratorTemplateContent(String type, String item);
+	String queryGeneratorTemplateContent(@Param(value = "type") String type, @Param(value = "item") String item, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询是否已存在此模板类型
-	 * 
-	 * @param type 模板类型
+	 *
+	 * @param type       模板类型
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getGeneratorTemplateByType(String type);
+	Integer getGeneratorTemplateByType(@Param(value = "type") String type, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增模板信息
@@ -72,10 +76,11 @@ public interface GeneratorTemplateMapper {
 
 	/**
 	 * 删除模板信息
-	 * 
-	 * @param type 模板类型
+	 *
+	 * @param type       模板类型
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteGeneratorTemplate(String[] type);
+	int deleteGeneratorTemplate(@Param(value = "array") String[] type, @Param(value = "tenantCode") String tenantCode);
 
 }

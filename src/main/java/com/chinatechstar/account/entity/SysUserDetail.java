@@ -12,6 +12,7 @@ import com.chinatechstar.component.commons.entity.TimeEntity;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.TelephoneNumber;
 import com.chinatechstar.component.commons.validator.UpdateDetailValidator;
+import com.chinatechstar.component.commons.validator.UpdateValidator;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
@@ -65,6 +66,10 @@ public class SysUserDetail extends TimeEntity implements Serializable {
 	@NotBlank(groups = { InsertValidator.class })
 	@Size(max = 6, min = 1, groups = { InsertValidator.class })
 	private String captcha;// 验证码
+	private String tenantCode;// 租户编码
+	@NotBlank(groups = { InsertValidator.class })
+	@Size(max = 64, min = 1, groups = { InsertValidator.class })
+	private String tenantName;// 租户名称
 
 	public Long getId() {
 		return id;
@@ -219,6 +224,22 @@ public class SysUserDetail extends TimeEntity implements Serializable {
 		this.captcha = captcha;
 	}
 
+	public String getTenantCode() {
+		return tenantCode;
+	}
+
+	public void setTenantCode(String tenantCode) {
+		this.tenantCode = tenantCode;
+	}
+
+	public String getTenantName() {
+		return tenantName;
+	}
+
+	public void setTenantName(String tenantName) {
+		this.tenantName = tenantName;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)
@@ -239,7 +260,7 @@ public class SysUserDetail extends TimeEntity implements Serializable {
 		return MoreObjects.toStringHelper(this).add("id", id).add("username", username).add("password", password).add("email", email).add("mobile", mobile)
 				.add("prefix", prefix).add("roleId", roleId).add("orgId", orgId).add("status", status).add("nickname", nickname).add("phone", phone)
 				.add("provinceRegionCode", provinceRegionCode).add("cityRegionCode", cityRegionCode).add("address", address).add("profile", profile)
-				.add("notifyMessage", notifyMessage).add("notifyTodo", notifyTodo).add("createTime", super.getCreateTime()).toString();
+				.add("notifyMessage", notifyMessage).add("notifyTodo", notifyTodo).add("tenantCode", tenantCode).add("tenantName", tenantName).add("createTime", super.getCreateTime()).toString();
 	}
 
 }

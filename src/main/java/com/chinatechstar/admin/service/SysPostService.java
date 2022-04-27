@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysPost;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 岗位信息的业务逻辑接口层
@@ -60,4 +61,10 @@ public interface SysPostService {
 	 */
 	void deleteSysPost(Long[] id);
 
+	/**
+	 * 导入岗位
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysPost(MultipartFile file);
 }

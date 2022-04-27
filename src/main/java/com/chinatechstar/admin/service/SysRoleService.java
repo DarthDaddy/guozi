@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysRole;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 角色信息的业务逻辑接口层
@@ -88,6 +89,13 @@ public interface SysRoleService {
 	 * @param sysRole 角色对象
 	 */
 	void updateSysRole(SysRole sysRole);
+
+    /**
+     * 导入角色
+     *
+     * @param file 文件资源
+     */
+    void importSysRole(MultipartFile file);
 
 	/**
 	 * 删除角色

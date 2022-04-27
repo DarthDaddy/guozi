@@ -33,9 +33,8 @@ public class CommonResourceServerConfig extends ResourceServerConfigurerAdapter 
 	public void configure(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity.headers().frameOptions().disable();
 		httpSecurity.authorizeRequests()
-				.antMatchers("/**/oauth/token", "/**/actuator/**", "/**/sysuserdetail/registerAccount", "/**/sysuserdetail/retrievePassword",
-						"/**/sysuserdetail/compareCaptcha", "/**/captcha/generateImageCaptcha","/**/notification/queryNotifications",
-						"/**/captcha/getSmsCaptcha", "/**/swagger-ui/**", "/**/file/deleteFile",
+				.antMatchers("/**/oauth/token", "/**/actuator/**", "/**/sysuser/registerAccountInitial", "/**/sysuserdetail/retrievePassword",
+						"/**/sysuserdetail/getTenantCodeByUser", "/**/sysuserdetail/compareCaptcha", "/**/captcha/generateImageCaptcha", "/**/captcha/getSmsCaptcha", "/**/swagger-ui/**",
 						"/**/swagger-ui.html/**", "/**/webjars/springfox-swagger-ui/**", "/**/swagger-resources/**", "/**/v2/api-docs/**",
 						"/**/static/upload/**", "/**/druid/**", "/**/ureport/**")
 				.permitAll().anyRequest().authenticated().and().csrf().disable();

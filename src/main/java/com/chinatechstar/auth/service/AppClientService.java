@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.auth.entity.AppClient;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 应用信息的业务逻辑接口层
@@ -61,4 +62,10 @@ public interface AppClientService {
 	 */
 	void deleteAppClient(Long[] id);
 
+	/**
+	 * 导入应用
+	 *
+	 * @param file 文件资源
+	 */
+    void importAppClient(MultipartFile file);
 }

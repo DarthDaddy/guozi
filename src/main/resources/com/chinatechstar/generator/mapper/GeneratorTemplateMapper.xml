@@ -35,24 +35,25 @@
 				#{item,jdbcType=VARCHAR}
 			</foreach>
 		</if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryTemplateByType" resultType="java.util.LinkedHashMap">
         SELECT item AS "item",content AS "content"
         FROM mscode_generator_template
-        WHERE type = #{type,jdbcType=VARCHAR}
+        WHERE type = #{type,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
-    <select id="queryGeneratorTemplateContent" parameterType="String" resultType="String">
+    <select id="queryGeneratorTemplateContent" resultType="String">
         SELECT content AS "content"
         FROM mscode_generator_template
-        WHERE type = #{type,jdbcType=VARCHAR} AND item = #{item,jdbcType=VARCHAR}
+        WHERE type = #{type,jdbcType=VARCHAR} AND item = #{item,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="getGeneratorTemplateByType" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_generator_template
-        WHERE type = #{type,jdbcType=VARCHAR}
+        WHERE type = #{type,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertGeneratorTemplate" parameterType="GeneratorTemplate">
@@ -67,7 +68,7 @@
         <set>
 			content=#{content}
         </set>
-        WHERE type=#{type,jdbcType=VARCHAR} AND item=#{item,jdbcType=VARCHAR}
+        WHERE type=#{type,jdbcType=VARCHAR} AND item=#{item,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteGeneratorTemplate">
@@ -75,6 +76,7 @@
 		<foreach item="type" collection="array" open="(" separator="," close=")">
 			#{type,jdbcType=VARCHAR}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

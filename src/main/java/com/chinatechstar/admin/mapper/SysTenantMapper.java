@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysTenant;
-import com.chinatechstar.admin.vo.SysTenantVO;
-import com.chinatechstar.file.vo.FileVO;
 
 /**
  * 租户信息的数据持久接口层
@@ -56,13 +54,4 @@ public interface SysTenantMapper {
 	 */
 	int deleteSysTenant(Long[] id);
 
-	List<SysTenantVO> querySysTenants();
-
-    List<SysTenant> querySysTenantByCurrent(String tenantCode);
-
-    List<SysTenant> querySysTenantList();
-
-	SysTenantVO querySysTenantVo(String tenantCode);
-
-	List<FileVO> queryFileListByTenantCode(String tenantCode);
 }

@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 参数信息的业务逻辑实现层
@@ -62,7 +64,7 @@ public class SysParamServiceImpl implements SysParamService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = sysParamMapper.querySysParam(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("sysparam", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysparam", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -84,7 +86,7 @@ public class SysParamServiceImpl implements SysParamService {
 	 */
 	@Override
 	public void insertSysParam(SysParam sysParam) {
-		Integer existing = sysParamMapper.getSysParamByParamName(sysParam.getParamName().trim());
+		Integer existing = sysParamMapper.getSysParamByParamName(sysParam.getParamName().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("参数名称已存在");
 		}
@@ -99,6 +101,7 @@ public class SysParamServiceImpl implements SysParamService {
 	 */
 	@Override
 	public void updateSysParam(SysParam sysParam) {
+		sysParam.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysParamMapper.updateSysParam(sysParam);
 		logger.info("参数已编辑： {}", sysParam.getParamName());
 	}
@@ -108,7 +111,25 @@ public class SysParamServiceImpl implements SysParamService {
 	 */
 	@Override
 	public void deleteSysParam(Long[] id) {
-		sysParamMapper.deleteSysParam(id);
+		sysParamMapper.deleteSysParam(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入参数
+	 */
+	@Override
+	public void importSysParam(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysParam sysParam = new SysParam();
+			sysParam.setParamName(data.get(0) == null ? "" : data.get(0));
+			sysParam.setParamKey(data.get(1) == null ? "" : data.get(1));
+			sysParam.setParamValue(data.get(2) == null ? "" : data.get(2));
+			insertSysParam(sysParam);
+		}
 	}
 
 }

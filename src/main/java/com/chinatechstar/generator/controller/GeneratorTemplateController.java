@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,7 +119,7 @@ public class GeneratorTemplateController {
 	}
 
 	/**
-	 * 根据查询条件导出模板信息
+	 * 根据查询条件导出模板信息到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -128,6 +130,52 @@ public class GeneratorTemplateController {
 			List<String> headList = Arrays.asList("ID", "模板类型", "模板类型名称", "模板项目", "模板项目名称", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = generatorTemplateService.queryGeneratorTemplateForExcel(paramMap);
 			ExcelUtils.exportExcel(headList, dataList, "模板管理", response);
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 根据查询条件导出模板信息到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordGeneratorTemplate")
+	public void exportWordGeneratorTemplate(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGeneratorTemplate(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出模板信息到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFGeneratorTemplate")
+	public void exportPDFGeneratorTemplate(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonGeneratorTemplate(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出模板信息到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonGeneratorTemplate(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("ID", "模板类型", "模板类型名称", "创建时间");
+			List<LinkedHashMap<String, Object>> dataList = generatorTemplateService.queryGeneratorTemplateForExcel(paramMap);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("item".equals(entry.getKey()) || "itemCn".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "模板信息", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "模板信息", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

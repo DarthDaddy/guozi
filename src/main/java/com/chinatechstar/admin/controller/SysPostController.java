@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import com.chinatechstar.component.commons.result.ResultBuilder;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.UpdateValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 岗位信息的控制层
@@ -104,7 +107,7 @@ public class SysPostController {
 	}
 
 	/**
-	 * 根据查询条件导出岗位
+	 * 根据查询条件导出岗位到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -112,9 +115,72 @@ public class SysPostController {
 	@PostMapping(path = "/exportSysPost")
 	public void exportSysPost(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "岗位编码", "岗位名称", "岗位排序", "上级岗位ID", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("岗位编码", "岗位名称", "岗位排序", "上级岗位ID");
+				ExcelUtils.exportExcel(headList, null, "岗位管理", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "岗位编码", "岗位名称", "岗位排序", "上级岗位ID", "创建时间");
+				List<LinkedHashMap<String, Object>> dataList = sysPostService.querySysPostForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "岗位管理", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入岗位
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysPost", consumes = {"multipart/form-data"})
+	public ActionResult importSysPost(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysPostService.importSysPost(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出岗位到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysPost")
+	public void exportWordSysPost(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysPost(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出岗位到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysPost")
+	public void exportPDFSysPost(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysPost(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出岗位到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonSysPost(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("岗位编码", "岗位名称", "岗位排序", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = sysPostService.querySysPostForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "岗位管理", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "parentId".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "岗位管理", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "岗位管理", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

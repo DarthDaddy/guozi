@@ -92,7 +92,7 @@ public class NotificationServiceImpl implements NotificationService {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				if ("id".equals(key)) {
-					List<Long> sysUserIdList = notificationMapper.querySysUserId(Long.valueOf(value.toString()));
+					List<Long> sysUserIdList = notificationMapper.querySysUserId(Long.valueOf(value.toString()), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 					usernameList = sysUserServiceClient.queryUsernameBySysUserId(sysUserIdList.stream().toArray(Long[]::new));
 				}
 			}
@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
 	public List<LinkedHashMap<String, Object>> queryHeadNotification(String username) {
 		List<LinkedHashMap<String, Object>> resultList = new ArrayList<>();
 		List<Long> sysUserIdList = sysUserServiceClient.querySysUserIdByUsername(new String[] { username });
-		List<LinkedHashMap<String, Object>> notificationList = notificationMapper.queryHeadNotification(sysUserIdList.get(0));
+		List<LinkedHashMap<String, Object>> notificationList = notificationMapper.queryHeadNotification(sysUserIdList.get(0), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		for (int i = 0; i < notificationList.size(); i++) {
 			LinkedHashMap<String, Object> notificationMap = notificationList.get(i);
 			Iterator<Entry<String, Object>> iterator = notificationMap.entrySet().iterator();
@@ -166,8 +166,9 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void updateNotification(Notification notification) {
+		notification.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		notificationMapper.updateNotification(notification);
-		notificationMapper.deleteNotificationSysUser(notification.getId());
+		notificationMapper.deleteNotificationSysUser(notification.getId(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		persistNotification(notification);
 		logger.info("消息通知已编辑： {}", notification.getTitle());
 	}
@@ -183,7 +184,7 @@ public class NotificationServiceImpl implements NotificationService {
 			sysUserIdList = sysUserServiceClient.querySysUserIdByUsername(null);// 查询全部用户ID
 		}
 		for (int i = 0; i < sysUserIdList.size(); i++) {
-			notificationMapper.insertNotificationSysUser(sequenceGenerator.nextId(), notification.getId(), sysUserIdList.get(i));
+			notificationMapper.insertNotificationSysUser(sequenceGenerator.nextId(), notification.getId(), sysUserIdList.get(i), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 	}
 
@@ -192,12 +193,7 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void deleteNotification(Long[] id) {
-		notificationMapper.deleteNotification(id);
-	}
-
-	@Override
-	public List<Notification> queryNotifications() {
-		return notificationMapper.queryNotifications();
+		notificationMapper.deleteNotification(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 }

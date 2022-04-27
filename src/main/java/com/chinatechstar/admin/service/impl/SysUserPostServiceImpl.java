@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户与岗位关联信息的业务逻辑实现层
@@ -76,7 +78,7 @@ public class SysUserPostServiceImpl implements SysUserPostService {
 		List<LinkedHashMap<String, Object>> resultList = sysUserPostMapper.querySysUserPost(paramMap);
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String roleData = sysRoleMapper.queryRoleData("sysuserpost", authentication.getName());
+		String roleData = sysRoleMapper.queryRoleData("sysuserpost", authentication.getName(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -90,7 +92,7 @@ public class SysUserPostServiceImpl implements SysUserPostService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> querySysUserPostTree(String userId) {
-		return sysUserPostMapper.querySysUserPostTree(userId);
+		return sysUserPostMapper.querySysUserPostTree(userId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -124,6 +126,7 @@ public class SysUserPostServiceImpl implements SysUserPostService {
 		validateSysUserPost(sysUserPost);
 		String postName = getSysPostName(sysUserPost.getPostCode());
 		sysUserPost.setPostName(postName);
+		sysUserPost.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysUserPostMapper.updateSysUserPost(sysUserPost);
 
 		logger.info("用户与岗位关联信息已编辑： {}", sysUserPost.getPostCode());
@@ -136,7 +139,7 @@ public class SysUserPostServiceImpl implements SysUserPostService {
 	 */
 	private void validateSysUserPost(SysUserPost sysUserPost) {
 		if (sysUserPost.getPostType() == 1) {
-			Integer existing = sysUserPostMapper.getSysUserPostInfo(sysUserPost.getId(), sysUserPost.getUserId(), sysUserPost.getPostType());
+			Integer existing = sysUserPostMapper.getSysUserPostInfo(sysUserPost.getId(), sysUserPost.getUserId(), sysUserPost.getPostType(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			if (existing != null && existing > 0) {
 				throw new IllegalArgumentException("只能新增一个主岗位");
 			}
@@ -197,7 +200,27 @@ public class SysUserPostServiceImpl implements SysUserPostService {
 	 */
 	@Override
 	public void deleteSysUserPost(Long[] id) {
-		sysUserPostMapper.deleteSysUserPost(id);
+		sysUserPostMapper.deleteSysUserPost(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入用户与岗位关联信息
+	 */
+	@Override
+	public void importSysUserPost(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysUserPost sysUserPost = new SysUserPost();
+			sysUserPost.setUserId(data.get(0) == null ? 0L : Long.valueOf(data.get(0)));
+			sysUserPost.setPostCode(data.get(1) == null ? "" : data.get(1));
+			sysUserPost.setPostDescription(data.get(2) == null ? "" : data.get(2));
+			sysUserPost.setPostType(data.get(3) == null ? 0 : Short.valueOf(data.get(3)));
+			sysUserPost.setStatus(data.get(4) == null ? 0 : Short.valueOf(data.get(4)));
+			insertSysUserPost(sysUserPost);
+		}
 	}
 
 }

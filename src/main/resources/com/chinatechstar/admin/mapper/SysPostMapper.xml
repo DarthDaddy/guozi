@@ -42,6 +42,7 @@
                 #{item}
             </foreach>
     	</if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="querySysPostTree" resultType="java.util.LinkedHashMap">
@@ -54,7 +55,7 @@
     <select id="getSysPostByPostCode" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_post
-        WHERE post_code = #{postCode,jdbcType=VARCHAR}
+        WHERE post_code = #{postCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysPost" parameterType="SysPost">
@@ -71,7 +72,7 @@
             <if test="parentId != null">parent_id=#{parentId},</if>
             post_sequence=#{postSequence,jdbcType=BIGINT}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteSysPost">
@@ -80,6 +81,7 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

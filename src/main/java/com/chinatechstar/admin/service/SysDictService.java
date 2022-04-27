@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.chinatechstar.admin.entity.SysDict;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 字典信息的业务逻辑接口层
@@ -78,4 +79,10 @@ public interface SysDictService {
 	 */
 	void deleteSysDict(Long[] id);
 
+	/**
+	 * 导入字典
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysDict(MultipartFile file);
 }

@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysOrg;
 
 /**
@@ -27,7 +28,7 @@ public interface SysOrgMapper {
 	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> querySysOrgTree(String tenantCode);
+	List<LinkedHashMap<String, Object>> querySysOrgTree(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询机构用户的树数据
@@ -35,14 +36,15 @@ public interface SysOrgMapper {
 	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryOrgUserTree(String tenantCode);
+	List<LinkedHashMap<String, Object>> queryOrgUserTree(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询所有机构ID
-	 * 
+	 *
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<Long> queryOrgId();
+	List<Long> queryOrgId(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增机构
@@ -62,10 +64,11 @@ public interface SysOrgMapper {
 
 	/**
 	 * 删除机构
-	 * 
-	 * @param id 机构ID
+	 *
+	 * @param id         机构ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteSysOrg(Long[] id);
+	int deleteSysOrg(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }

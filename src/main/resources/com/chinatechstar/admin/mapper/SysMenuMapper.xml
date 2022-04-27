@@ -51,30 +51,31 @@
     <select id="queryMenuCode" resultType="String">
         SELECT DISTINCT menu_code AS "menuCode"
         FROM mscode_sys_menu_button
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryMenuButton" resultType="String">
         SELECT menu_button AS "menuButton" 
         FROM mscode_sys_menu_button 
-        WHERE menu_code = #{menuCode,jdbcType=VARCHAR}
+        WHERE menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryMenuIdByRoleId" resultType="String">
         SELECT CAST(menu_id AS CHAR) AS "menuId"
         FROM mscode_sys_role_menu
-        WHERE role_id = #{roleId,jdbcType=BIGINT} AND menu_id NOT IN (SELECT parent_id FROM mscode_sys_menu)
+        WHERE role_id = #{roleId,jdbcType=BIGINT} AND menu_id NOT IN (SELECT parent_id FROM mscode_sys_menu) AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryMenuButtonByRoleCode" resultType="String">
         SELECT menu_button AS "menuButton"
         FROM mscode_sys_role_menubutton
-        WHERE role_code = #{roleCode,jdbcType=VARCHAR}
+        WHERE role_code = #{roleCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryDataFieldByMenuCode" parameterType="map" resultType="java.util.LinkedHashMap">
         SELECT CAST(id AS CHAR) AS "key",role_code AS "roleCode",data_field AS "dataField"
         FROM mscode_sys_role_data
-        WHERE menu_code = #{menuCode,jdbcType=VARCHAR}
+        WHERE menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryParentIdById" resultType="Long">
@@ -84,18 +85,19 @@
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id,jdbcType=BIGINT}
         </foreach>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryCheckedMenuButton" resultType="String">
         SELECT menu_button AS "menuButton"
         FROM mscode_sys_menu_button
-        WHERE menu_code = #{menuCode,jdbcType=VARCHAR}
+        WHERE menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="getSysMenuByMenuCode" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_menu
-        WHERE menu_code = #{menuCode,jdbcType=VARCHAR}
+        WHERE menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
     
     <select id="getSysMenuByIdMenuPath" resultType="Integer">
@@ -105,6 +107,7 @@
         <if test="id != null">
             AND id != #{id}
         </if>
+        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>    
     
     <insert id="insertSysMenu" parameterType="SysMenu">
@@ -116,30 +119,30 @@
 
     <insert id="insertRoleIdMenuId">
         INSERT INTO mscode_sys_role_menu
-            (id, role_id, menu_id)
+            (id, role_id, menu_id, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, #{menuId,jdbcType=BIGINT})
+            (#{id,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, #{menuId,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <insert id="insertRoleCodeMenuButton">
         INSERT INTO mscode_sys_role_menubutton
-            (id, role_code, menu_button)
+            (id, role_code, menu_button, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{roleCode,jdbcType=VARCHAR}, #{menuButton,jdbcType=VARCHAR})
+            (#{id,jdbcType=BIGINT}, #{roleCode,jdbcType=VARCHAR}, #{menuButton,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <insert id="insertMenuButton">
         INSERT INTO mscode_sys_menu_button
-            (id, menu_code, menu_button)
+            (id, menu_code, menu_button, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{menuCode,jdbcType=VARCHAR}, #{menuButton,jdbcType=VARCHAR})
+            (#{id,jdbcType=BIGINT}, #{menuCode,jdbcType=VARCHAR}, #{menuButton,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <insert id="insertRoleCodeMenuData">
         INSERT INTO mscode_sys_role_data
-            (id, role_code, menu_code, data_field)
+            (id, role_code, menu_code, data_field, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{roleCode,jdbcType=VARCHAR}, #{menuCode,jdbcType=VARCHAR}, #{dataField,jdbcType=VARCHAR})
+            (#{id,jdbcType=BIGINT}, #{roleCode,jdbcType=VARCHAR}, #{menuCode,jdbcType=VARCHAR}, #{dataField,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <update id="updateSysMenu" parameterType="SysMenu">
@@ -153,7 +156,7 @@
             menu_component=#{menuComponent,jdbcType=VARCHAR},
             menu_sequence=#{menuSequence,jdbcType=BIGINT}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
 
     <delete id="deleteSysMenu">
@@ -163,22 +166,23 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND mscode_sys_menu.tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
     <delete id="deleteRoleMenu">
-        DELETE FROM mscode_sys_role_menu WHERE role_id = #{roleId,jdbcType=BIGINT}
+        DELETE FROM mscode_sys_role_menu WHERE role_id = #{roleId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
     <delete id="deleteRoleMenuButton">
-        DELETE FROM mscode_sys_role_menubutton WHERE role_code = #{roleCode,jdbcType=VARCHAR}
+        DELETE FROM mscode_sys_role_menubutton WHERE role_code = #{roleCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
     <delete id="deleteButtonByMenuCode">
-        DELETE FROM mscode_sys_menu_button WHERE menu_code = #{menuCode,jdbcType=VARCHAR}
+        DELETE FROM mscode_sys_menu_button WHERE menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
     <delete id="deleteRoleMenuData">
-        DELETE FROM mscode_sys_role_data WHERE role_code = #{roleCode,jdbcType=VARCHAR} AND menu_code = #{menuCode,jdbcType=VARCHAR}
+        DELETE FROM mscode_sys_role_data WHERE role_code = #{roleCode,jdbcType=VARCHAR} AND menu_code = #{menuCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

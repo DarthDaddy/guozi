@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.notification.entity.Notification;
 
 /**
@@ -23,19 +24,21 @@ public interface NotificationMapper {
 
 	/**
 	 * 查询顶部消息通知的数据列表
-	 * 
-	 * @param sysUserId 用户ID
+	 *
+	 * @param sysUserId  用户ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> queryHeadNotification(Long sysUserId);
+	List<LinkedHashMap<String, Object>> queryHeadNotification(@Param(value = "sysUserId") Long sysUserId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 根据消息通知ID查询关联的用户ID
-	 * 
+	 *
 	 * @param notificationId 消息通知ID
+	 * @param tenantCode     租户编码
 	 * @return
 	 */
-	List<Long> querySysUserId(Long notificationId);
+	List<Long> querySysUserId(@Param(value = "notificationId") Long notificationId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增消息通知
@@ -47,13 +50,14 @@ public interface NotificationMapper {
 
 	/**
 	 * 新增消息通知与系统用户关联记录
-	 * 
+	 *
 	 * @param id             消息通知与系统用户关联ID
 	 * @param notificationId 消息通知ID
 	 * @param sysUserId      发布对象的用户ID
+	 * @param tenantCode     租户编码
 	 * @return
 	 */
-	int insertNotificationSysUser(Long id, Long notificationId, Long sysUserId);
+	int insertNotificationSysUser(@Param(value = "id") Long id, @Param(value = "notificationId") Long notificationId, @Param(value = "sysUserId") Long sysUserId, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 编辑消息通知
@@ -65,19 +69,20 @@ public interface NotificationMapper {
 
 	/**
 	 * 删除消息通知
-	 * 
-	 * @param id 消息通知ID
+	 *
+	 * @param id         消息通知ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteNotification(Long[] id);
+	int deleteNotification(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 删除消息通知与系统用户关联记录
-	 * 
+	 *
 	 * @param notificationId 消息通知ID
+	 * @param tenantCode     租户编码
 	 * @return
 	 */
-	int deleteNotificationSysUser(Long notificationId);
+	int deleteNotificationSysUser(@Param(value = "notificationId") Long notificationId, @Param(value = "tenantCode") String tenantCode);
 
-    List<Notification> queryNotifications();
 }

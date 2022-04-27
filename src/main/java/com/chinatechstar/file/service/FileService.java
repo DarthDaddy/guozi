@@ -16,7 +16,7 @@ public interface FileService {
 
 	/**
 	 * 查询文件分页
-	 *
+	 * 
 	 * @param currentPage      当前页数
 	 * @param pageSize         每页记录数
 	 * @param id               文件ID
@@ -30,7 +30,7 @@ public interface FileService {
 	 * @return
 	 */
 	Map<String, Object> queryFile(Integer currentPage, Integer pageSize, Long id, String originalFilename, String content, Long parentId, Long previousId,
-			String contentType, String fileType, String sorter,String tenantCode);
+			String contentType, String fileType, String sorter);
 
 	/**
 	 * 查询文件类型名称
@@ -57,7 +57,7 @@ public interface FileService {
 	 * @param fileType   文件类型
 	 * @throws IOException
 	 */
-	String uploadFile(MultipartFile file, Long id, Long parentId, String uploadType, String fileType,String tenantCode) throws Exception;
+	String uploadFile(MultipartFile file, Long id, Long parentId, String uploadType, String fileType) throws Exception;
 
 	/**
 	 * 新增文件夹

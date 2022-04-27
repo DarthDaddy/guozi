@@ -26,6 +26,14 @@ public interface ModelService {
 	LinkedHashMap<String, Object> queryModel(Integer currentPage, Integer pageSize, String name, String category, String orgId, Integer version);
 
 	/**
+	 * 获取模型XML
+	 *
+	 * @param modelId 模型ID
+	 * @return
+	 */
+	String getModelResource(String modelId);
+
+	/**
 	 * 新增模型
 	 * 
 	 * @param name         模型名称
@@ -45,12 +53,12 @@ public interface ModelService {
 	 * @param name         模型名称
 	 * @param category     模型类别
 	 * @param orgId        机构ID
-	 * @param menuCode     菜单编码
+	 * @param description  模型描述
 	 * @param referGroupId 可引用机构ID
 	 * @param userId       可引用人ID
 	 * @throws IOException
 	 */
-	void updateModel(String modelId, String name, String category, String orgId, String menuCode, String[] referGroupId, String[][] userId) throws IOException;
+	void updateModel(String modelId, String name, String category, String orgId, String description, String[] referGroupId, String[][] userId) throws IOException;
 
 	/**
 	 * 复制模型

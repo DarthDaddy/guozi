@@ -39,6 +39,7 @@
     <select id="queryRoleCode" resultType="java.util.LinkedHashMap">
         SELECT role_code AS "name",role_code AS "value"
         FROM mscode_sys_role
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryRoleCodeList" resultType="String">
@@ -49,30 +50,31 @@
     <select id="queryRoleNameCheckbox" resultType="java.util.LinkedHashMap">
         SELECT CAST(id AS CHAR) AS "value",role_name AS "label"
         FROM mscode_sys_role
+        WHERE tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="getSysRoleByRoleCode" resultType="Integer">
         SELECT DISTINCT 1
         FROM mscode_sys_role
-        WHERE role_code = #{roleCode,jdbcType=VARCHAR}
+        WHERE role_code = #{roleCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
-    <select id="queryUserIdByRoleId" parameterType="Long" resultType="Long">
+    <select id="queryUserIdByRoleId" resultType="Long">
         SELECT user_id
         FROM mscode_sys_role_user
-        WHERE role_id = #{roleId,jdbcType=BIGINT}
+        WHERE role_id = #{roleId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
-    <select id="queryRoleIdByUserId" parameterType="Long" resultType="Long">
+    <select id="queryRoleIdByUserId" resultType="Long">
         SELECT role_id
         FROM mscode_sys_role_user
-        WHERE user_id = #{userId,jdbcType=BIGINT}
+        WHERE user_id = #{userId,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <select id="queryRoleData" resultType="String">
         SELECT mrd.data_field AS "dataField"
         FROM mscode_sys_role_data mrd
-        WHERE mrd.menu_code = #{menuCode,jdbcType=VARCHAR} AND EXISTS (SELECT 1 FROM mscode_sys_role msr,mscode_sys_role_user msru,mscode_sys_user msu WHERE msr.id = msru.role_id AND msu.id = msru.user_id AND msr.role_code = mrd.role_code AND msu.username = #{username,jdbcType=VARCHAR})
+        WHERE mrd.menu_code = #{menuCode,jdbcType=VARCHAR} AND EXISTS (SELECT 1 FROM mscode_sys_role msr,mscode_sys_role_user msru,mscode_sys_user msu WHERE msr.id = msru.role_id AND msu.id = msru.user_id AND msr.role_code = mrd.role_code AND msu.username = #{username,jdbcType=VARCHAR}) AND mrd.tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </select>
 
     <insert id="insertSysRole" parameterType="SysRole">
@@ -84,9 +86,9 @@
 
     <insert id="insertSysRoleUser">
         INSERT INTO mscode_sys_role_user
-            (id, role_id, user_id, post_code)
+            (id, role_id, user_id, post_code, tenant_code)
         VALUES
-            (#{id,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{postCode,jdbcType=VARCHAR})
+            (#{id,jdbcType=BIGINT}, #{roleId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{postCode,jdbcType=VARCHAR}, #{tenantCode,jdbcType=VARCHAR})
     </insert>
 
     <update id="updateSysRole" parameterType="SysRole">
@@ -95,7 +97,7 @@
             <if test="roleName != null and roleName != ''">role_name=#{roleName},</if>
             role_description=#{roleDescription,jdbcType=VARCHAR}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT}
+        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </update>
     
     <delete id="deleteSysRole">
@@ -105,14 +107,15 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
+        AND mscode_sys_role.tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
     <delete id="deleteSysRoleUser">
-        DELETE FROM mscode_sys_role_user WHERE user_id = #{userId,jdbcType=BIGINT} OR role_id = #{roleId,jdbcType=BIGINT}
+        DELETE FROM mscode_sys_role_user WHERE (user_id = #{userId,jdbcType=BIGINT} OR role_id = #{roleId,jdbcType=BIGINT}) AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
     <delete id="deleteSysRoleUserPost">
-        DELETE FROM mscode_sys_role_user WHERE user_id = #{userId,jdbcType=BIGINT} AND post_code = #{postCode,jdbcType=VARCHAR}
+        DELETE FROM mscode_sys_role_user WHERE user_id = #{userId,jdbcType=BIGINT} AND post_code = #{postCode,jdbcType=VARCHAR} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

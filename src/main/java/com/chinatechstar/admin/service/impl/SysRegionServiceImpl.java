@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.chinatechstar.component.commons.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,9 @@ import com.chinatechstar.admin.mapper.SysRegionMapper;
 import com.chinatechstar.admin.mapper.SysRoleMapper;
 import com.chinatechstar.admin.service.SysDictService;
 import com.chinatechstar.admin.service.SysRegionService;
-import com.chinatechstar.component.commons.result.PaginationBuilder;
-import com.chinatechstar.component.commons.utils.CollectionUtils;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
-import com.chinatechstar.component.commons.utils.RecursiveListUtils;
-import com.chinatechstar.component.commons.utils.SequenceGenerator;
+import com.chinatechstar.component.commons.result.PaginationBuilder;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 区域信息的业务逻辑实现层
@@ -59,7 +58,7 @@ public class SysRegionServiceImpl implements SysRegionService {
 		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 
 		List<LinkedHashMap<String, Object>> totalList = sysRegionMapper.querySysRegion(paramMap);
-		String roleData = sysRoleMapper.queryRoleData("sysregion", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysregion", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			totalList = CollectionUtils.convertFilterList(totalList, roleDataArray);
@@ -110,7 +109,7 @@ public class SysRegionServiceImpl implements SysRegionService {
 	@Override
 	public LinkedHashMap<String, Object> queryProvince() {
 		LinkedHashMap<String, Object> resultMap = new LinkedHashMap<>();
-		List<LinkedHashMap<String, Object>> resultList = sysRegionMapper.queryProvince();
+		List<LinkedHashMap<String, Object>> resultList = sysRegionMapper.queryProvince(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		resultMap.put("list", resultList);
 		return resultMap;
 	}
@@ -121,7 +120,7 @@ public class SysRegionServiceImpl implements SysRegionService {
 	@Override
 	public LinkedHashMap<String, Object> queryCity(String province) {
 		LinkedHashMap<String, Object> resultMap = new LinkedHashMap<>();
-		List<LinkedHashMap<String, Object>> resultList = sysRegionMapper.queryCity(province);
+		List<LinkedHashMap<String, Object>> resultList = sysRegionMapper.queryCity(province, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		resultMap.put("list", resultList);
 		return resultMap;
 	}
@@ -132,7 +131,7 @@ public class SysRegionServiceImpl implements SysRegionService {
 	@Override
 	public void insertSysRegion(SysRegion sysRegion) {
 		validateRegion(sysRegion);
-		Integer existing = sysRegionMapper.getSysRegionByRegionCode(sysRegion.getRegionCode().trim());
+		Integer existing = sysRegionMapper.getSysRegionByRegionCode(sysRegion.getRegionCode().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("区域代码已存在");
 		}
@@ -148,6 +147,7 @@ public class SysRegionServiceImpl implements SysRegionService {
 	@Override
 	public void updateSysRegion(SysRegion sysRegion) {
 		validateRegion(sysRegion);
+		sysRegion.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysRegionMapper.updateSysRegion(sysRegion);
 		logger.info("区域已编辑： {}", sysRegion.getRegionName());
 	}
@@ -173,7 +173,26 @@ public class SysRegionServiceImpl implements SysRegionService {
 			regionCodes.add(regionCode[i]);
 			getRecursiveRegionCodes(regionCode[i], regionCodes);
 		}
-		sysRegionMapper.deleteSysRegion(regionCodes.stream().toArray(String[]::new));
+		sysRegionMapper.deleteSysRegion(regionCodes.stream().toArray(String[]::new), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入区域
+	 */
+	@Override
+	public void importSysRegion(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysRegion sysRegion = new SysRegion();
+			sysRegion.setRegionName(data.get(0) == null ? "" : data.get(0));
+			sysRegion.setRegionCode(data.get(1) == null ? "" : data.get(1));
+			sysRegion.setRegionType(data.get(2) == null ? "" : data.get(2));
+			sysRegion.setParentRegionCode(data.get(3) == null ? "" : data.get(3));
+			insertSysRegion(sysRegion);
+		}
 	}
 
 	/**

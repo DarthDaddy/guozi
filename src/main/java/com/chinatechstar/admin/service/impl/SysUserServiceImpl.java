@@ -1,15 +1,14 @@
 package com.chinatechstar.admin.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
+import com.chinatechstar.admin.entity.*;
+import com.chinatechstar.admin.mapper.*;
+import com.chinatechstar.admin.service.SysTenantService;
+import com.chinatechstar.cache.redis.constants.ApplicationConstants;
+import com.chinatechstar.cache.redis.util.RedisUtils;
+import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,9 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.chinatechstar.admin.entity.SysUser;
-import com.chinatechstar.admin.mapper.SysRoleMapper;
-import com.chinatechstar.admin.mapper.SysUserMapper;
 import com.chinatechstar.admin.service.SysOrgService;
 import com.chinatechstar.admin.service.SysUserService;
 import com.chinatechstar.component.commons.result.PaginationBuilder;
@@ -35,6 +31,7 @@ import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.SequenceGenerator;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户信息的业务逻辑实现层
@@ -50,11 +47,27 @@ public class SysUserServiceImpl implements SysUserService {
 	private static SequenceGenerator sequenceGenerator = new SequenceGenerator();
 
 	@Autowired
+	private RedisUtils redisUtils;
+	@Autowired
 	private SysUserMapper sysUserMapper;
 	@Autowired
 	private SysRoleMapper sysRoleMapper;
 	@Autowired
+	private SysMenuMapper sysMenuMapper;
+	@Autowired
+	private SysPostMapper sysPostMapper;
+	@Autowired
+	private SysUrlMapper sysUrlMapper;
+	@Autowired
+	private SysOrgMapper sysOrgMapper;
+	@Autowired
+	private SysDictMapper sysDictMapper;
+	@Autowired
+	private SysUserPostMapper sysUserPostMapper;
+	@Autowired
 	private SysOrgService sysOrgService;
+	@Autowired
+	private SysTenantService sysTenantService;
 	@Autowired
 	private SessionRegistry sessionRegistry;
 	@Autowired
@@ -108,7 +121,7 @@ public class SysUserServiceImpl implements SysUserService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = sysUserMapper.querySysUser(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("onlinesysuser", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("onlinesysuser", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -122,7 +135,7 @@ public class SysUserServiceImpl implements SysUserService {
 	 */
 	@Override
 	public Map<String, Object> querySysUser(Integer currentPage, Integer pageSize, String username, String status, Long orgId, Long[] roleId, String nickname,
-			String mobile, String sorter) {
+			String mobile, String tenantCode, String sorter) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("username", username);
 		paramMap.put("nickname", nickname);
@@ -139,7 +152,11 @@ public class SysUserServiceImpl implements SysUserService {
 			paramMap.put("roleId", roleId[0]);
 		}
 
-		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
+		if (StringUtils.isNotBlank(tenantCode)) {
+			paramMap.put("tenantCode", tenantCode);// 租户编码参数
+		} else {
+			paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
+		}
 		if (StringUtils.isNotBlank(status)) {
 			String[] statusArray = status.split(",");
 			paramMap.put("statusList", (Short[]) ConvertUtils.convert(statusArray, Short.class));
@@ -156,7 +173,7 @@ public class SysUserServiceImpl implements SysUserService {
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
 		List<LinkedHashMap<String, Object>> resultList = sysUserMapper.querySysUser(paramMap);
 
-		String roleData = sysRoleMapper.queryRoleData("sysuser", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"));
+		String roleData = sysRoleMapper.queryRoleData("sysuser", CurrentUserUtils.getOAuth2AuthenticationInfo().get("name"), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		String[] roleDataArray = roleData == null ? null : roleData.split(",");
 		if (roleDataArray != null && roleDataArray.length > 0) {// 处理数据权限
 			return PaginationBuilder.buildResult(CollectionUtils.convertFilterList(resultList, roleDataArray), page.getTotal(), currentPage, pageSize);
@@ -216,7 +233,7 @@ public class SysUserServiceImpl implements SysUserService {
 	 */
 	@Override
 	public List<LinkedHashMap<String, Object>> queryUsername(Long[] id) {
-		return sysUserMapper.queryUsername(id);
+		return sysUserMapper.queryUsername(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 	}
 
 	/**
@@ -224,7 +241,144 @@ public class SysUserServiceImpl implements SysUserService {
 	 */
 	@Override
 	public List<Long> querySysUserId(String[] username) {
-		return sysUserMapper.querySysUserId(username);
+		return sysUserMapper.querySysUserId(username, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 注册用户并初始化
+	 */
+	@Override
+	public void insertSysUserInitial(SysUser sysUser) {
+		String smsCaptchaKey = ApplicationConstants.SMS_CAPTCHA_PREFIX + sysUser.getMobile();
+		String smsCaptchaCache = redisUtils.get(smsCaptchaKey);
+		if (!sysUser.getCaptcha().equals(smsCaptchaCache)) {
+			throw new IllegalArgumentException("手机验证码错误");
+		}
+		redisUtils.del(smsCaptchaKey);
+
+		Integer existing = sysUserMapper.getSysUserByIdentification(sysUser.getUsername().trim(), sysUser.getEmail().trim(), sysUser.getMobile().trim());
+		if (existing != null && existing > 0) {
+			throw new IllegalArgumentException("用户名或邮箱或手机号已存在");
+		}
+		Long userId = sequenceGenerator.nextId();
+		sysUser.setId(userId);
+		sysUser.setPassword(encoder.encode(sysUser.getPassword()));
+		sysUser.setProvinceRegionCode("440000");
+		sysUser.setCityRegionCode("440100");
+		String tenantCode = String.valueOf(new Random().nextInt(99999999));
+		sysUser.setTenantCode(tenantCode);
+		sysUserMapper.insertSysUser(sysUser);
+
+		// 新增租户
+		SysTenant sysTenant = new SysTenant();
+		sysTenant.setId(sequenceGenerator.nextId());
+		sysTenant.setTenantCode(tenantCode);
+		sysTenant.setTenantName(sysUser.getTenantName());
+		sysTenantService.insertSysTenant(sysTenant);
+
+		// 新增岗位
+		SysPost sysPost = new SysPost();
+		sysPost.setId(sequenceGenerator.nextId());
+		String postCode = "OFFICE-" + tenantCode;
+		sysPost.setPostCode(postCode);
+		String postName = sysUser.getTenantName() + "管理员岗位";
+		sysPost.setPostName(postName);
+		sysPost.setParentId(0L);
+		sysPost.setTenantCode(tenantCode);
+		sysPostMapper.insertSysPost(sysPost);
+
+		// 新增角色
+		SysRole sysRole = new SysRole();
+		Long roleId = sequenceGenerator.nextId();
+		sysRole.setId(roleId);
+		sysRole.setRoleCode("ROLE_ADMIN_" + tenantCode);
+		sysRole.setRoleName(sysUser.getTenantName() + "管理员角色");
+		sysRole.setTenantCode(tenantCode);
+		sysRoleMapper.insertSysRole(sysRole);
+
+		// 新增用户与岗位关联
+		SysUserPost sysUserPost = new SysUserPost();
+		sysUserPost.setId(sequenceGenerator.nextId());
+		sysUserPost.setUserId(userId);
+		sysUserPost.setPostCode(postCode);
+		sysUserPost.setPostName(postName);
+		sysUserPost.setPostType((short) 1);
+		sysUserPost.setStatus((short) 1);
+		sysUserPost.setTenantCode(tenantCode);
+		sysUserPostMapper.insertSysUserPost(sysUserPost);
+
+		// 新增用户、岗位与角色关联
+		sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), roleId, userId, postCode, tenantCode);
+
+		// 新增机构
+		SysOrg sysOrg = new SysOrg();
+		sysOrg.setId(sequenceGenerator.nextId());
+		sysOrg.setOrgName(sysUser.getTenantName());
+		sysOrg.setOrgType("company");
+		sysOrg.setParentId(0L);
+		sysOrg.setTenantCode(tenantCode);
+		sysOrgMapper.insertSysOrg(sysOrg);
+
+		// 新增菜单
+		List<LinkedHashMap<String, Object>> menuTotalList = sysMenuMapper.querySysMenu(new HashMap<>());
+		if (menuTotalList.size() > 0) {
+			for (int i = 0; i < menuTotalList.size(); i++) {
+				LinkedHashMap<String, Object> map = menuTotalList.get(i);
+				SysMenu sysMenu = new SysMenu();
+				Long menuId = sequenceGenerator.nextId();
+				sysMenu.setId(menuId);
+				sysMenu.setMenuCode(String.valueOf(map.get("menuCode")));
+				sysMenu.setMenuName(String.valueOf(map.get("menuName")));
+				sysMenu.setMenuIcon(String.valueOf(map.get("menuIcon")));
+				sysMenu.setMenuPath(String.valueOf(map.get("menuPath")));
+				sysMenu.setMenuComponent(String.valueOf(map.get("menuComponent")));
+				sysMenu.setMenuSequence(Long.valueOf(String.valueOf(map.get("menuSequence"))));
+				sysMenu.setMenuStatus(Short.valueOf(String.valueOf(map.get("menuStatus"))));
+				sysMenu.setParentId(0L);
+				sysMenu.setTenantCode(tenantCode);
+				sysMenuMapper.insertSysMenu(sysMenu);
+
+				// 新增角色与菜单关联
+				sysMenuMapper.insertRoleIdMenuId(sequenceGenerator.nextId(), roleId, menuId, tenantCode);
+			}
+		}
+
+		// 新增URL
+		List<LinkedHashMap<String, Object>> urlTotalList = sysUrlMapper.querySysUrl(new HashMap<>());
+		if (urlTotalList.size() > 0) {
+			for (int i = 0; i < urlTotalList.size(); i++) {
+				LinkedHashMap<String, Object> map = urlTotalList.get(i);
+				SysUrl sysUrl = new SysUrl();
+				Long urlId = sequenceGenerator.nextId();
+				sysUrl.setId(urlId);
+				sysUrl.setUrl(String.valueOf(map.get("url")));
+				sysUrl.setDescription(String.valueOf(map.get("description")));
+				sysUrl.setTenantCode(tenantCode);
+				sysUrlMapper.insertSysUrl(sysUrl);
+
+				// 新增URL与角色关联
+				sysUrlMapper.insertUrlIdRoleId(Long.valueOf(sequenceGenerator.nextId()), urlId, roleId, tenantCode);
+			}
+		}
+
+		// 新增字典
+		List<LinkedHashMap<String, Object>> dictTotalList = sysDictMapper.querySysDict(new HashMap<>());
+		if (dictTotalList.size() > 0) {
+			for (int i = 0; i < dictTotalList.size(); i++) {
+				LinkedHashMap<String, Object> map = dictTotalList.get(i);
+				SysDict sysDict = new SysDict();
+				sysDict.setId(sequenceGenerator.nextId());
+				sysDict.setDictName(String.valueOf(map.get("dictName")));
+				sysDict.setDictValue(String.valueOf(map.get("dictValue")));
+				sysDict.setDictType(String.valueOf(map.get("dictType")));
+				sysDict.setDictSequence(Long.valueOf(String.valueOf(map.get("dictSequence"))));
+				sysDict.setParentId(0L);
+				sysDict.setTenantCode(tenantCode);
+				sysDictMapper.insertSysDict(sysDict);
+			}
+		}
+
+		logger.info("用户已新增： {}", sysUser.getUsername());
 	}
 
 	/**
@@ -243,7 +397,7 @@ public class SysUserServiceImpl implements SysUserService {
 		sysUserMapper.insertSysUser(sysUser);
 		if (sysUser.getRoleId() != null && sysUser.getRoleId().length > 0) {
 			for (int i = 0; i < sysUser.getRoleId().length; i++) {
-				sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), sysUser.getRoleId()[i], userId, "CTS-RD-04");
+				sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), sysUser.getRoleId()[i], userId, "CTS-RD-04", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 		logger.info("用户已新增： {}", sysUser.getUsername());
@@ -258,11 +412,11 @@ public class SysUserServiceImpl implements SysUserService {
 		for (int x = 0; x < roleId.length; x++) {
 			roleIdSet.add(roleId[x]);
 		}
-		sysRoleMapper.deleteSysRoleUserPost(userId, postCode);
+		sysRoleMapper.deleteSysRoleUserPost(userId, postCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		Iterator<Long> iterator = roleIdSet.iterator();
 		while (iterator.hasNext()) {
 			Long roleIdData = iterator.next();
-			sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), roleIdData, userId, postCode);
+			sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), roleIdData, userId, postCode, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		}
 	}
 
@@ -271,18 +425,19 @@ public class SysUserServiceImpl implements SysUserService {
 	 */
 	@Override
 	public void updateSysUser(SysUser sysUser) {
-		Integer existing = sysUserMapper.getSysUserByIdEmailMobile(sysUser.getId(), sysUser.getEmail().trim(), sysUser.getMobile().trim());
+		Integer existing = sysUserMapper.getSysUserByIdEmailMobile(sysUser.getId(), sysUser.getEmail().trim(), sysUser.getMobile().trim(), CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		if (existing != null && existing > 0) {
 			throw new IllegalArgumentException("邮箱或手机号已存在");
 		}
 		if (StringUtils.isNotBlank(sysUser.getPassword())) {
 			sysUser.setPassword(encoder.encode(sysUser.getPassword()));
 		}
+		sysUser.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
 		sysUserMapper.updateSysUser(sysUser);
 		if (sysUser.getRoleId() != null && sysUser.getRoleId().length > 0) {
-			sysRoleMapper.deleteSysRoleUser(sysUser.getId(), null);
+			sysRoleMapper.deleteSysRoleUser(sysUser.getId(), null, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			for (int i = 0; i < sysUser.getRoleId().length; i++) {
-				sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), sysUser.getRoleId()[i], sysUser.getId(), "CTS-RD-04");
+				sysRoleMapper.insertSysRoleUser(sequenceGenerator.nextId(), sysUser.getRoleId()[i], sysUser.getId(), "CTS-RD-04", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 			}
 		}
 		logger.info("用户已编辑： {}", sysUser.getUsername());
@@ -296,7 +451,29 @@ public class SysUserServiceImpl implements SysUserService {
 		if (ArrayUtils.contains(id, 1L)) {
 			throw new IllegalArgumentException("系统管理员不能删除");
 		}
-		sysUserMapper.deleteSysUser(id);
+		sysUserMapper.deleteSysUser(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	/**
+	 * 导入用户
+	 */
+	@Override
+	public void importSysUser(MultipartFile file) {
+		if (file.getOriginalFilename().toLowerCase().indexOf(".xlsx") == -1) {
+			throw new IllegalArgumentException("请上传xlsx格式的文件");
+		}
+		List<Map<Integer, String>> listMap = ExcelUtils.readExcel(file);
+		for (Map<Integer, String> data : listMap) {
+			SysUser sysUser = new SysUser();
+			sysUser.setUsername(data.get(0) == null ? "" : data.get(0));
+			sysUser.setPassword(data.get(1) == null ? "" : data.get(1));
+			sysUser.setEmail(data.get(2) == null ? "" : data.get(2));
+			sysUser.setMobile(data.get(3) == null ? "" : data.get(3));
+			sysUser.setPrefix(data.get(4) == null ? "" : data.get(4));
+			sysUser.setOrgId(data.get(5) == null ? 0L : Long.valueOf(data.get(5)));
+			sysUser.setStatus(data.get(6) == null ? 1 : Short.valueOf(data.get(6)));
+			insertSysUser(sysUser);
+		}
 	}
 
 }

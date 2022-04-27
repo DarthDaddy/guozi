@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.chinatechstar.admin.entity.SysOrg;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 机构信息的业务逻辑接口层
@@ -96,4 +97,10 @@ public interface SysOrgService {
 	 */
 	void deleteSysOrg(Long[] id);
 
+	/**
+	 * 导入机构
+	 *
+	 * @param file 文件资源
+	 */
+    void importSysOrg(MultipartFile file);
 }

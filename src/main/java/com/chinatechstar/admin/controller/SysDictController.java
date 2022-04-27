@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.PDFUtils;
+import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import com.chinatechstar.component.commons.result.ResultBuilder;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import com.chinatechstar.component.commons.validator.InsertValidator;
 import com.chinatechstar.component.commons.validator.UpdateValidator;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 字典信息的控制层
@@ -104,7 +107,7 @@ public class SysDictController {
 	}
 
 	/**
-	 * 根据查询条件导出字典
+	 * 根据查询条件导出字典到Excel
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map
@@ -112,9 +115,72 @@ public class SysDictController {
 	@PostMapping(path = "/exportSysDict")
 	public void exportSysDict(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
 		try {
-			List<String> headList = Arrays.asList("ID", "字典名称", "字典值", "字典类型", "排序", "上级字典ID", "创建时间");
+			if (paramMap.get("isTemplate").equals("1")) { // 1为模板，0不为模板
+				List<String> headList = Arrays.asList("字典名称", "字典值", "字典类型", "排序", "上级字典ID");
+				ExcelUtils.exportExcel(headList, null, "字典管理", response);
+			} else {
+				List<String> headList = Arrays.asList("ID", "字典名称", "字典值", "字典类型", "排序", "上级字典ID", "创建时间");
+				List<LinkedHashMap<String, Object>> dataList = sysDictService.querySysDictForExcel(paramMap);
+				ExcelUtils.exportExcel(headList, dataList, "字典管理", response);
+			}
+		} catch (Exception e) {
+			logger.warn(e.toString());
+		}
+	}
+
+	/**
+	 * 导入字典
+	 *
+	 * @param file 文件资源
+	 * @return
+	 */
+	@PostMapping(value = "/importSysDict", consumes = {"multipart/form-data"})
+	public ActionResult importSysDict(@RequestParam(name = "file", required = true) MultipartFile file) {
+		sysDictService.importSysDict(file);
+		return ResultBuilder.buildActionSuccess();
+	}
+
+	/**
+	 * 根据查询条件导出字典到Word
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportWordSysDict")
+	public void exportWordSysDict(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysDict(response, paramMap, "Word");
+	}
+
+	/**
+	 * 根据查询条件导出字典到PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 */
+	@PostMapping(path = "/exportPDFSysDict")
+	public void exportPDFSysDict(HttpServletResponse response, @RequestParam Map<String, Object> paramMap) {
+		exportCommonSysDict(response, paramMap, "PDF");
+	}
+
+	/**
+	 * 根据查询条件导出字典到Word或PDF
+	 *
+	 * @param response 响应对象
+	 * @param paramMap 参数Map
+	 * @param flag     Word或PDF
+	 */
+	private void exportCommonSysDict(HttpServletResponse response, @RequestParam Map<String, Object> paramMap, String flag) {
+		try {
+			List<String> headList = Arrays.asList("字典名称", "字典值", "字典类型", "排序", "创建时间");
 			List<LinkedHashMap<String, Object>> dataList = sysDictService.querySysDictForExcel(paramMap);
-			ExcelUtils.exportExcel(headList, dataList, "字典管理", response);
+			dataList.forEach(map -> {
+				map.entrySet().removeIf(entry -> ("id".equals(entry.getKey()) || "parentId".equals(entry.getKey())));
+			});
+			if (flag == "Word") {
+				WordUtils.exportWord(headList, dataList, "字典管理", response);
+			} else if (flag == "PDF") {
+				PDFUtils.exportPDF(headList, dataList, "字典管理", response);
+			}
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}

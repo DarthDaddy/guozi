@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysPost;
 
 /**
@@ -35,15 +36,16 @@ public interface SysPostMapper {
 	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	List<LinkedHashMap<String, Object>> querySysPostTree(String tenantCode);
+	List<LinkedHashMap<String, Object>> querySysPostTree(@Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 查询是否已存在此岗位编码
-	 * 
-	 * @param postCode 岗位编码
+	 *
+	 * @param postCode   岗位编码
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	Integer getSysPostByPostCode(String postCode);
+	Integer getSysPostByPostCode(@Param(value = "postCode") String postCode, @Param(value = "tenantCode") String tenantCode);
 
 	/**
 	 * 新增岗位
@@ -63,10 +65,11 @@ public interface SysPostMapper {
 
 	/**
 	 * 删除岗位
-	 * 
-	 * @param id 岗位ID
+	 *
+	 * @param id         岗位ID
+	 * @param tenantCode 租户编码
 	 * @return
 	 */
-	int deleteSysPost(Long[] id);
+	int deleteSysPost(@Param(value = "array") Long[] id, @Param(value = "tenantCode") String tenantCode);
 
 }
