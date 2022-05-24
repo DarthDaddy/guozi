@@ -26,7 +26,7 @@ public class FileUtils {
 
 	/**
 	 * 下载文件
-	 * 
+	 *
 	 * @param originalFilename 文件名称
 	 * @param url              下载URL
 	 * @param response         响应对象
@@ -39,9 +39,11 @@ public class FileUtils {
 			response.setCharacterEncoding("utf-8");
 			response.setHeader("Content-Disposition", "attachment;filename=" + originalFilename);
 			response.setContentType("application/octet-stream");
-			File rootDirectoryPath = new File(ResourceUtils.getURL("classpath:").getPath());
-			String path = rootDirectoryPath + url;
+//			File rootDirectoryPath = new File(ResourceUtils.getURL("classpath:").getPath());
+//			String path = rootDirectoryPath + url;
+			String path = url;
 			File file = new File(path);
+			System.out.println("path：" + path);
 			if (!file.exists()) {
 				throw new FileNotFoundException("找不到此文件： " + originalFilename);
 			}

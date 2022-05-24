@@ -34,7 +34,7 @@
             <if test="formDescription != null and formDescription != ''">form_description=#{formDescription},</if>
             form_content=#{formContent,jdbcType=VARCHAR}
         </set>
-        WHERE id=#{id,jdbcType=BIGINT} AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
+        WHERE id=#{id,jdbcType=BIGINT}
     </update>
 
     <delete id="deleteGeneratorForm">
@@ -42,7 +42,6 @@
 		<foreach item="id" collection="array" open="(" separator="," close=")">
 			#{id,jdbcType=BIGINT}
 		</foreach>
-        AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
 	</delete>
 
 </mapper>

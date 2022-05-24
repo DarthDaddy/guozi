@@ -56,7 +56,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 查询当前用户的授权角色、菜单和按钮
-	 * 
+	 *
 	 * @param username 用户名
 	 * @param mobile   手机号
 	 * @param parentId 菜单信息的上级ID
@@ -85,7 +85,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 注册用户
-	 * 
+	 *
 	 * @param sysUserDetail 用户详细信息
 	 * @return
 	 */
@@ -97,7 +97,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 编辑用户详细信息
-	 * 
+	 *
 	 * @param sysUserDetail 用户详细信息
 	 * @return
 	 */
@@ -109,7 +109,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 根据字段编辑用户信息
-	 * 
+	 *
 	 * @param fieldValue 修改的字段值
 	 * @param field      修改的字段
 	 * @param id         用户ID
@@ -124,7 +124,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 修改用户密码
-	 * 
+	 *
 	 * @param password    原密码
 	 * @param newPassword 新密码
 	 * @param id          用户ID
@@ -139,7 +139,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 找回密码
-	 * 
+	 *
 	 * @param email       邮箱
 	 * @param charCaptcha 验证码字符
 	 * @return
@@ -153,7 +153,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 比对验证码
-	 * 
+	 *
 	 * @param request     请求对象
 	 * @param charCaptcha 验证码字符
 	 * @return
@@ -167,7 +167,7 @@ public class SysUserDetailController {
 
 	/**
 	 * 修改用户头像图片地址
-	 * 
+	 *
 	 * @param avatar 用户头像图片地址
 	 * @param id     用户ID
 	 */

@@ -77,13 +77,24 @@ public class FileServiceImpl implements FileService {
 	 */
 	@Override
 	public Map<String, Object> queryFile(Integer currentPage, Integer pageSize, Long id, String originalFilename, String content, Long parentId,
-			Long previousId, String contentType, String fileType, String sorter) {
+			Long previousId, String contentType, String fileType, String sorter, String tenantCode) {
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("originalFilename", originalFilename);
 		paramMap.put("content", content);
 		paramMap.put("contentType", contentType);
 		paramMap.put("fileType", fileType);
-		paramMap.put("tenantCode", CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
+		//查询条件的租户编码不为空时，传入前端提供的租户编码
+		if(tenantCode != null && tenantCode != ""){
+			paramMap.put("tenantCode", tenantCode);
+
+		}else{
+			String currentTenantCode =  CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode");
+			if(currentTenantCode != null && !currentTenantCode.equals("10001")){
+				paramMap.put("tenantCode", currentTenantCode);// 当前用户的租户编码
+			}else{
+				paramMap.put("tenantCode", "");
+			}
+		}
 		if (StringUtils.isNotBlank(sorter)) {
 			String sort = sorter.substring(0, sorter.lastIndexOf('_'));
 			String sequence = "ascend".equals(sorter.substring(sorter.lastIndexOf('_') + 1)) ? "ASC" : "DESC";
@@ -97,6 +108,7 @@ public class FileServiceImpl implements FileService {
 		paramMap.put("parentId", parentId);
 		paramMap.put("previousId", previousId);
 		Page<Object> page = PageHelper.startPage(currentPage, pageSize);
+		System.out.println("tenantCode：" + paramMap.get("tenantCode"));
 		List<LinkedHashMap<String, Object>> resultList = fileMapper.queryFile(paramMap);
 		logger.info("此文件组已查询： {}", originalFilename);
 
@@ -122,8 +134,10 @@ public class FileServiceImpl implements FileService {
 	 */
 	@Override
 	public void deleteFile(Long[] id) throws IOException {
-		List<String> urlList = fileMapper.queryUrlList(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
-		File rootDirectoryPath = new File(ResourceUtils.getURL("classpath:").getPath());
+//		List<String> urlList = fileMapper.queryUrlList(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+		List<String> urlList = fileMapper.queryUrlList(id, null);
+//		File rootDirectoryPath = new File(ResourceUtils.getURL("classpath:").getPath());
+		String rootDirectoryPath = "/www/wwwroot/huanbaoitemjar";
 		for (int i = 0; i < urlList.size(); i++) {
 			String path = rootDirectoryPath + urlList.get(i);
 			Files.deleteIfExists(Paths.get(path));// 删除磁盘里的文件
@@ -135,7 +149,8 @@ public class FileServiceImpl implements FileService {
 			getRecursiveIds(id[i], ids);
 		}
 		Long[] fileId = ids.stream().toArray(Long[]::new);
-		fileMapper.deleteFile(fileId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode")); // 删除数据库文件记录
+//		fileMapper.deleteFile(fileId, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode")); // 删除数据库文件记录
+		fileMapper.deleteFile(fileId, null); // 删除数据库文件记录
 
 		logger.info("此文件组已彻底删除，ID数组： {}", id.toString());
 	}
@@ -144,7 +159,7 @@ public class FileServiceImpl implements FileService {
 	 * 上传文件
 	 */
 	@Override
-	public String uploadFile(MultipartFile file, Long id, Long parentId, String uploadType, String fileType) throws Exception {
+	public String uploadFile(MultipartFile file, Long id, Long parentId, String uploadType, String fileType, String tenantCode) throws Exception {
 		String fileName = DateFormatUtils.format(new Date(), "yyyyMMddHHmmssSSS")
 				+ file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.'), file.getOriginalFilename().length());
 		String path = generatePath(fileName);
@@ -217,7 +232,11 @@ public class FileServiceImpl implements FileService {
 
 		entity.setId(sequenceGenerator.nextId());
 		entity.setParentId(parentId);
-		entity.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
+		if(tenantCode != null && !tenantCode.equals("")){
+			entity.setTenantCode(tenantCode);
+		}else{
+			entity.setTenantCode(CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));// 当前用户的租户编码
+		}
 		fileMapper.insertFileSysUser(sequenceGenerator.nextId(), entity.getId(), id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
 		fileMapper.insertFile(entity);
 

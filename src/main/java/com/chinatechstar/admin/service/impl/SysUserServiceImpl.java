@@ -1,7 +1,15 @@
 package com.chinatechstar.admin.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.chinatechstar.admin.entity.*;
 import com.chinatechstar.admin.mapper.*;
@@ -23,6 +31,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.chinatechstar.admin.entity.SysUser;
+import com.chinatechstar.admin.mapper.SysRoleMapper;
+import com.chinatechstar.admin.mapper.SysUserMapper;
 import com.chinatechstar.admin.service.SysOrgService;
 import com.chinatechstar.admin.service.SysUserService;
 import com.chinatechstar.component.commons.result.PaginationBuilder;

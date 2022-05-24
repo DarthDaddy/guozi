@@ -3,6 +3,12 @@
 
 <mapper namespace="com.chinatechstar.notification.mapper.NotificationMapper">
 
+
+    <select id="queryNotifications" resultType="java.util.Map">
+        select id,title,content,create_time from mscode_notification
+    </select>
+
+
     <select id="queryNotification" parameterType="map" resultType="java.util.LinkedHashMap">
         SELECT CAST(mn.id AS CHAR) AS "id",mn.title AS "title",mn.content AS "content",mn.type AS "type",msdt.dict_name AS "typeCn",mn.priority AS "priority",msdp.dict_name AS "priorityCn",mn.publisher AS "publisher",mn.start_time AS "startTime",mn.end_time AS "endTime",mn.create_time AS "createTime"
         FROM mscode_notification mn LEFT JOIN mscode_sys_dict msdt ON mn.type = msdt.dict_value AND msdt.dict_type = 'notification' LEFT JOIN mscode_sys_dict msdp ON mn.priority = msdp.dict_value AND msdp.dict_type = 'priority'
@@ -86,7 +92,6 @@
         <foreach item="id" collection="array" open="(" separator="," close=")">
             #{id,jdbcType=BIGINT}
         </foreach>
-        AND mscode_notification.tenant_code = #{tenantCode,jdbcType=VARCHAR}
     </delete>
     
     <delete id="deleteNotificationSysUser">

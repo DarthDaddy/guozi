@@ -31,8 +31,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity.authorizeRequests()
-				.antMatchers("/**/oauth/token", "/**/actuator/**", "/**/sysuser/registerAccountInitial", "/**/sysuserdetail/retrievePassword",
-						"/**/sysuserdetail/getTenantCodeByUser", "/**/sysuserdetail/compareCaptcha", "/**/captcha/generateImageCaptcha", "/**/captcha/getSmsCaptcha", "/**/swagger-ui/**",
+				.antMatchers("/**/oauth/token", "/**/actuator/**", "/**/sysuser/registerAccountInitial" ,"/**/sysuserdetail/registerAccount", "/**/sysuserdetail/retrievePassword",
+                        "/**/sysuserdetail/getTenantCodeByUser", "/**/sysuserdetail/compareCaptcha", "/**/captcha/generateImageCaptcha", "/**/captcha/getSmsCaptcha", "/**/swagger-ui/**",
 						"/**/swagger-ui.html/**", "/**/webjars/springfox-swagger-ui/**", "/**/swagger-resources/**", "/**/v2/api-docs/**",
 						"/**/static/upload/**")
 				.permitAll().anyRequest().authenticated().and().csrf().disable();

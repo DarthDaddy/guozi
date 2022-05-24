@@ -96,7 +96,7 @@ public class SysParamController {
 	}
 
 	/**
-	 * 根据查询条件导出参数到Excel
+	 * 根据查询条件导出参数
 	 * 
 	 * @param response 响应对象
 	 * @param paramMap 参数Map

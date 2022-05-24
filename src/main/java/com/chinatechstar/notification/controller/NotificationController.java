@@ -37,6 +37,22 @@ public class NotificationController {
 	@Autowired
 	private NotificationService notificationService;
 
+
+	/**
+	 * 查找首页的咨询信息
+	 *
+	 * @param notificationVO 咨询前端参数
+	 * @return
+	 */
+	@GetMapping(path = "/queryNotifications")
+	public List<Notification> queryNotifications(NotificationVO notificationVO) {
+		List<Notification> list =notificationService.queryNotifications();
+		return list;
+	}
+
+
+
+
 	/**
 	 * 查询消息通知分页
 	 * 

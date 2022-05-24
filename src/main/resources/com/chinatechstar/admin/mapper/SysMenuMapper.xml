@@ -108,7 +108,7 @@
             AND id != #{id}
         </if>
         AND tenant_code = #{tenantCode,jdbcType=VARCHAR}
-    </select>    
+    </select>
     
     <insert id="insertSysMenu" parameterType="SysMenu">
         INSERT INTO mscode_sys_menu

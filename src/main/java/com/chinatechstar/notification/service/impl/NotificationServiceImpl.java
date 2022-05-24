@@ -193,7 +193,12 @@ public class NotificationServiceImpl implements NotificationService {
 	 */
 	@Override
 	public void deleteNotification(Long[] id) {
-		notificationMapper.deleteNotification(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+        notificationMapper.deleteNotification(id, CurrentUserUtils.getOAuth2AuthenticationInfo().get("tenantCode"));
+	}
+
+	@Override
+	public List<Notification> queryNotifications() {
+		return notificationMapper.queryNotifications();
 	}
 
 }

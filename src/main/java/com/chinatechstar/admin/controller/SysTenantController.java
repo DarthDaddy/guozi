@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.chinatechstar.component.commons.utils.CurrentUserUtils;
 import com.chinatechstar.component.commons.utils.PDFUtils;
 import com.chinatechstar.component.commons.utils.WordUtils;
 import org.slf4j.Logger;
@@ -46,6 +47,12 @@ public class SysTenantController {
 	@Autowired
 	private SysTenantService sysTenantService;
 
+	@GetMapping("querySysTenantVo")
+	public ListResult<Object> querySysTenantVo(){
+		List<SysTenantVO> sysTenantVO=sysTenantService.querySysTenantVo();
+		return ResultBuilder.buildListSuccess ( sysTenantVO);
+	}
+
 	/**
 	 * 查询租户分页
 	 * 
@@ -57,6 +64,37 @@ public class SysTenantController {
 		Map<String, Object> data = sysTenantService.querySysTenant(sysTenantVO.getCurrentPage(), sysTenantVO.getPageSize(), sysTenantVO.getTenantCode(),
 				sysTenantVO.getTenantName(), sysTenantVO.getTenantContact(), sysTenantVO.getTenantEmail(), sysTenantVO.getTenantTel(), sysTenantVO.getSorter());
 		return ResultBuilder.buildListSuccess(data);
+	}
+
+	/**
+	 * 租户列表
+	 * @return
+	 */
+    @GetMapping("querySysTenantLists")
+	public ListResult<Object> querySysTenantLists(){
+		List<SysTenant> sysTenantList = sysTenantService.querySysTenantList();
+		return ResultBuilder.buildListSuccess ( sysTenantList );
+	}
+
+
+	/**
+	 * 根据当前用户获取企业信息
+	 * @return
+	 */
+	@GetMapping("querySysTenantByCurrent")
+	public ListResult<Object> querySysTenantByCurrent(){
+		System.out.println (CurrentUserUtils.getOAuth2AuthenticationInfo ().get ( "tenantCode" ));
+		List<SysTenant> sysTenant=sysTenantService.querySysTenantByCurrent(CurrentUserUtils.getOAuth2AuthenticationInfo ().get ( "tenantCode" ));
+		return ResultBuilder.buildListSuccess ( sysTenant );
+	}
+	/**
+	 * 获取租户列表无分页
+	 * @return
+	 */
+	@GetMapping(path = "querySysTenantList")
+	public ListResult<Object> querySysTenantList(){
+		List<SysTenantVO> sysTenants=sysTenantService.querySysTenants();
+		return ResultBuilder.buildListSuccess ( sysTenants );
 	}
 
 	/**

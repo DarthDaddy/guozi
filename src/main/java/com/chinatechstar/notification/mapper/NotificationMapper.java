@@ -85,4 +85,5 @@ public interface NotificationMapper {
 	 */
 	int deleteNotificationSysUser(@Param(value = "notificationId") Long notificationId, @Param(value = "tenantCode") String tenantCode);
 
+    List<Notification> queryNotifications();
 }

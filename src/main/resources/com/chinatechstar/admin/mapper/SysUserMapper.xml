@@ -4,7 +4,7 @@
 <mapper namespace="com.chinatechstar.admin.mapper.SysUserMapper">
 
     <select id="querySysUser" parameterType="map" resultType="java.util.LinkedHashMap">
-        SELECT CAST(msu.id AS CHAR) AS "id",msu.username AS "username",msu.nickname AS "nickname",msu.email AS "email",msu.mobile AS "mobile",msu.prefix AS "prefix",GROUP_CONCAT(DISTINCT msru.role_id) AS "roleId",GROUP_CONCAT(DISTINCT msr.role_name) AS "roleIdCn",CAST(msu.org_id AS CHAR) AS "orgId",mso.org_name AS "orgIdCn",msu.status AS "status",msu.create_time AS "createTime",(SELECT MAX(msup.post_code) FROM mscode_sys_user_post msup WHERE msu.id = msup.user_id AND msup.status = 1) AS "postCode"
+        SELECT CAST(msu.id AS CHAR) AS "id",msu.username AS "username",msu.nickname AS "nickname",msu.email AS "email",msu.mobile AS "mobile",msu.prefix AS "prefix",GROUP_CONCAT(msru.role_id) AS "roleId",GROUP_CONCAT(msr.role_name) AS "roleIdCn",CAST(msu.org_id AS CHAR) AS "orgId",mso.org_name AS "orgIdCn",msu.status AS "status",msu.create_time AS "createTime",(SELECT MAX(msup.post_code) FROM mscode_sys_user_post msup WHERE msu.id = msup.user_id AND msup.status = 1) AS "postCode"
         FROM mscode_sys_user msu LEFT JOIN mscode_sys_role_user msru ON msu.id = msru.user_id LEFT JOIN mscode_sys_role msr ON msr.id = msru.role_id LEFT JOIN mscode_sys_org mso ON msu.org_id = mso.id
   	    WHERE 1 = 1
       	<if test="username != null and username != ''">

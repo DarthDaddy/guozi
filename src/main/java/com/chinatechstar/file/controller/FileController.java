@@ -46,9 +46,9 @@ public class FileController {
 	 * @return
 	 */
 	@GetMapping(path = "/queryFile")
-	public ListResult<Object> queryFile(FileVO fileVO) {
+	public ListResult<Object> queryFile(FileVO fileVO, String tenantCode) {
 		Map<String, Object> data = fileService.queryFile(fileVO.getCurrentPage(), fileVO.getPageSize(), fileVO.getId(), fileVO.getOriginalFilename(),
-				fileVO.getContent(), fileVO.getParentId(), fileVO.getPreviousId(), fileVO.getContentType(), fileVO.getFileType(), fileVO.getSorter());
+				fileVO.getContent(), fileVO.getParentId(), fileVO.getPreviousId(), fileVO.getContentType(), fileVO.getFileType(), fileVO.getSorter(), tenantCode);
 		return ResultBuilder.buildListSuccess(data);
 	}
 
@@ -106,8 +106,9 @@ public class FileController {
 	@PostMapping(value = "/uploadFile", consumes = { "multipart/form-data" })
 	public ListResult<Object> uploadFile(@RequestParam(name = "file", required = true) MultipartFile file, @RequestParam(name = "id", required = true) Long id,
 			@RequestParam(name = "parentId", required = false) Long parentId, @RequestParam(name = "uploadType", required = false) String uploadType,
+										 @RequestParam(name = "tenantCode", required = false) String tenantCode,
 			@RequestParam(name = "fileType", required = false) String fileType) throws Exception {
-		String url = fileService.uploadFile(file, id, parentId, uploadType, fileType);
+		String url = fileService.uploadFile(file, id, parentId, uploadType, fileType, tenantCode);
 		return ResultBuilder.buildListSuccess(url);
 	}
 
@@ -122,11 +123,18 @@ public class FileController {
 	@PostMapping(path = "/downloadFile")
 	public void downloadFile(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam(name = "originalFilename", required = true) String originalFilename, @RequestParam(name = "url", required = true) String url) {
+		if(url != null && url !=""){
+			url = "/www/wwwroot/huanbaoitemjar" + url;
+		}
+
+		System.out.println("文件地址：" + url);
+
 		try {
 			FileUtils.downloadFile(originalFilename, url, response);
 		} catch (Exception e) {
 			logger.warn(e.toString());
 		}
 	}
+
 
 }

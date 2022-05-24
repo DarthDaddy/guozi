@@ -1,11 +1,14 @@
 package com.chinatechstar.admin.service.impl;
 
+import java.util.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chinatechstar.admin.vo.SysTenantVO;
 import com.chinatechstar.component.commons.utils.CurrentUserUtils;
+import com.chinatechstar.file.vo.FileVO;
 import com.chinatechstar.component.commons.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -135,6 +138,32 @@ public class SysTenantServiceImpl implements SysTenantService {
 			sysTenant.setTenantTel(data.get(4) == null ? "" : data.get(4));
 			insertSysTenant(sysTenant);
 		}
+	}
+
+	@Override
+	public List<SysTenantVO> querySysTenants() {
+		return sysTenantMapper.querySysTenants();
+	}
+
+	@Override
+	public List<SysTenant> querySysTenantByCurrent(String tenantCode) {
+		return sysTenantMapper.querySysTenantByCurrent(tenantCode);
+	}
+
+	@Override
+	public List<SysTenant> querySysTenantList() {
+		return sysTenantMapper.querySysTenantList();
+	}
+
+	@Override
+	public List<SysTenantVO> querySysTenantVo() {
+		String tenantCode = CurrentUserUtils.getOAuth2AuthenticationInfo ().get ( "tenantCode" );
+		SysTenantVO sysTenantVOS = sysTenantMapper.querySysTenantVo ( tenantCode );
+		List<FileVO> fileVOS = sysTenantMapper.queryFileListByTenantCode(tenantCode);
+		sysTenantVOS.setFileList ( fileVOS );
+		List<SysTenantVO> sysTenantVOSList= new ArrayList<> ();
+		sysTenantVOSList.add ( sysTenantVOS );
+		return sysTenantVOSList;
 	}
 
 }

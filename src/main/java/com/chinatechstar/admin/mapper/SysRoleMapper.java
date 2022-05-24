@@ -6,6 +6,9 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Param;
 import com.chinatechstar.admin.entity.SysRole;
+import com.chinatechstar.admin.entity.SysTenant;
+import com.chinatechstar.admin.vo.SysTenantVO;
+import com.chinatechstar.file.vo.FileVO;
 
 /**
  * 角色信息的数据持久接口层

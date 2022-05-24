@@ -4,8 +4,24 @@
 <mapper namespace="com.chinatechstar.admin.mapper.SysTenantMapper">
 
     <select id="querySysTenant" parameterType="map" resultType="java.util.LinkedHashMap">
-        SELECT CAST(id AS CHAR) AS "id",tenant_code AS "tenantCode",tenant_name AS "tenantName",tenant_contact AS "tenantContact",tenant_email AS "tenantEmail",tenant_tel AS "tenantTel",create_time AS "createTime"
-        FROM mscode_sys_tenant
+        SELECT
+        CAST( id AS CHAR ) AS "id",
+        tenant_code AS "tenantCode",
+        tenant_name AS "tenantName",
+        tenant_contact AS "tenantContact",
+        tenant_email AS "tenantEmail",
+        tenant_tel AS "tenantTel",
+        create_time AS "createTime",
+        tenant_logo AS "tenantLogo",
+        tenant_site AS "tenantSite",
+        tenant_land AS "tenantLand",
+        tenant_type AS  "tenant_type",
+        area_code  AS  "areaCode",
+        tenant_plan AS "tenantPlan",
+        tenant_rain AS "tenantRain",
+        tenant_area AS "tenantArea"
+        FROM
+        mscode_sys_tenant
   	    WHERE 1 = 1
       	<if test="tenantCode != null and tenantCode != ''">
     		AND tenant_code LIKE CONCAT('%',#{tenantCode},'%')
@@ -35,12 +51,57 @@
             AND id != #{id}
         </if>
     </select>
+    <select id="querySysTenants" resultType="java.util.Map">
+         SELECT
+                id,
+                tenant_code,
+                tenant_name,
+                tenant_contact,
+                tenant_email,
+                tenant_logo,
+                tenant_site,
+                tenant_land,
+                tenant_type,
+                area_code,
+                tenant_plan,
+                tenant_rain,
+                tenant_area
+            FROM
+                mscode_sys_tenant
+    </select>
 
     <insert id="insertSysTenant" parameterType="SysTenant">
-        INSERT INTO mscode_sys_tenant
-            (id, tenant_code, tenant_name, tenant_contact, tenant_email, tenant_tel)
-        VALUES
-            (#{id,jdbcType=BIGINT}, #{tenantCode,jdbcType=VARCHAR}, #{tenantName,jdbcType=VARCHAR}, #{tenantContact,jdbcType=VARCHAR}, #{tenantEmail,jdbcType=VARCHAR}, #{tenantTel,jdbcType=VARCHAR})
+        INSERT INTO mscode_sys_tenant (
+                    id,
+                    tenant_code,
+                    tenant_name,
+                    tenant_contact,
+                    tenant_email,
+                    tenant_tel,
+                    tenant_logo,
+                    tenant_site,
+                    tenant_land,
+                    tenant_type,
+                    area_code,
+                    tenant_plan,
+                    tenant_rain,
+                    tenant_area
+                )
+                VALUES
+                    (#{id,jdbcType=BIGINT},
+                    #{tenantCode,jdbcType=VARCHAR},
+                    #{tenantName,jdbcType=VARCHAR},
+                    #{tenantContact,jdbcType=VARCHAR},
+                    #{tenantEmail,jdbcType=VARCHAR},
+                    #{tenantTel,jdbcType=VARCHAR},
+                    #{tenantLogo,jdbcType=VARCHAR},
+                    #{tenantSite,jdbcType=VARCHAR},
+                    #{tenantLand,jdbcType=VARCHAR},
+                    #{tenantType,jdbcType=VARCHAR},
+                    #{areaCode,jdbcType=VARCHAR},
+                    #{tenantPlan,jdbcType=VARCHAR},
+                    #{tenantRain,jdbcType=VARCHAR},
+                    #{tenantArea,jdbcType=VARCHAR})
     </insert>
 
     <update id="updateSysTenant" parameterType="SysTenant">
@@ -50,7 +111,15 @@
             <if test="tenantName != null and tenantName != ''">tenant_name=#{tenantName},</if>
             tenant_contact=#{tenantContact,jdbcType=VARCHAR},
             tenant_email=#{tenantEmail,jdbcType=VARCHAR},
-            tenant_tel=#{tenantTel,jdbcType=VARCHAR}
+            tenant_tel=#{tenantTel,jdbcType=VARCHAR},
+            tenant_logo=#{tenantLogo,jdbcType=VARCHAR},
+            tenant_site=#{tenantSite,jdbcType=VARCHAR},
+            tenant_land=#{tenantLand,jdbcType=VARCHAR},
+            tenant_type=#{tenantType,jdbcType=VARCHAR},
+            area_code= #{areaCode,jdbcType=VARCHAR},
+            tenant_plan=#{tenantPlan,jdbcType=VARCHAR},
+            tenant_rain =#{tenantRain,jdbcType=VARCHAR},
+            tenant_area =#{tenantArea,jdbcType=VARCHAR}
         </set>
         WHERE id=#{id,jdbcType=BIGINT}
     </update>
@@ -61,5 +130,44 @@
 			#{id,jdbcType=BIGINT}
 		</foreach>
 	</delete>
+    <select id="querySysTenantByCurrent" parameterType="java.lang.String" resultType="java.util.Map">
+      select * from mscode_sys_tenant where tenant_code = #{tenantCode}
+    </select>
+    <select id="querySysTenantList" resultType="java.util.Map">
+        select tenant_name,tenant_code from mscode_sys_tenant
+    </select>
+    <select id="querySysTenantVo" parameterType="java.lang.String" resultType="com.chinatechstar.admin.vo.SysTenantVO">
+        SELECT
+                CAST( id AS CHAR ) AS "id",
+                tenant_code AS "tenantCode",
+                tenant_name AS "tenantName",
+                tenant_contact AS "tenantContact",
+                tenant_email AS "tenantEmail",
+                tenant_tel AS "tenantTel",
+                create_time AS "createTime",
+                tenant_logo AS "tenantLogo",
+                tenant_site AS "tenantSite",
+                tenant_land AS "tenantLand",
+                tenant_type AS "tenant_type",
+                area_code AS "areaCode",
+                tenant_plan AS "tenantPlan",
+                tenant_rain AS "tenantRain",
+                tenant_area AS "tenantArea"
+            FROM
+                mscode_sys_tenant
+            WHERE
+                tenant_code = #{tenantCode}
+    </select>
+    <select id="queryFileListByTenantCode" parameterType="java.lang.String" resultType="com.chinatechstar.file.vo.FileVO">
+          SELECT
+                id,
+                url,
+                original_filename AS originalFilename,
+                tenant_code AS tenantCode
+            FROM
+                mscode_file
+            WHERE
+                tenant_code = #{tenantCode}
+    </select>
 
 </mapper>
